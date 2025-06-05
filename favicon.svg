@@ -1,0 +1,13 @@
+<svg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'>
+  <title>Minify Icon</title>
+  <style>
+    .icon-background {fill: #cc8500;}
+    .icon-foreground {fill: #FFFFFF;}
+  </style>
+  <rect width='32' height='32' rx='4' class='icon-background'/>
+  <rect x='8' y='7' width='16' height='3.5' rx='0.75' class='icon-foreground'/>
+  <rect x='8' y='14.25' width='16' height='3.5' rx='0.75' class='icon-foreground'/>
+  <rect x='8' y='21.5' width='16' height='3.5' rx='0.75' class='icon-foreground'/>
+  <path d='M8.5 16L4.5 13V19L8.5 16Z' class='icon-foreground'/>
+  <path d='M23.5 16L27.5 13V19L23.5 16Z' class='icon-foreground'/>
+</svg>
