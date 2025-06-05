@@ -1,6 +1,6 @@
 # Goat Minify
 
-Minify JS, CSS, HTML, XML, JSON, and more. Auto detect or manually select type. Choose minifcation level. Download or copy output.
+Minify JS, CSS, HTML, XML, JSON, and more. Auto detect or manually select type. Choose minify level. Download or copy output.
 
 ![Screenshot 2025-06-05 170650](https://github.com/user-attachments/assets/649cf8b8-e879-4ba4-8a5d-390c2967e714)
 
