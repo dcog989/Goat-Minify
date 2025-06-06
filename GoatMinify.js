@@ -7,8 +7,8 @@
  * @license MIT
  * @author Chase McGoat
  * @createdAt 2025-04-20
- * @lastModified 2025-06-05
- * @version 1.2.8
+ * @lastModified 2025-06-06
+ * @version 1.3.0
  */
 document.addEventListener("DOMContentLoaded", () => {
     const inputArea = document.getElementById("input-area");
@@ -91,11 +91,9 @@ document.addEventListener("DOMContentLoaded", () => {
         let typeDisplayName = (typeValue && typeValue !== "none") ? typeValue.toUpperCase() : "NONE";
         if (typeValue === 'md') typeDisplayName = 'Markdown';
 
-
         const valueSpan = `<span class="detected-type-value" style="font-weight: bold; color: ${UI_CONSTANTS.DEFAULT_HIGHLIGHT_COLOR};">${typeDisplayName}</span>`;
         typeDisplayOutput.innerHTML = `${displayLabel}: ${valueSpan}`;
     }
-
 
     function getVisualLineCountForLogicalLine(logicalLineText, textarea) {
         if (!measurementHelperDiv) {
@@ -122,7 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const scrollHeight = measurementHelperDiv.scrollHeight;
         const singleLineHeight = parseFloat(styles.lineHeight) || (parseFloat(styles.fontSize) * parseFloat(getComputedStyle(document.body).getPropertyValue('--font-line-height-textarea') || 1.4));
-
 
         if (singleLineHeight === 0 || isNaN(singleLineHeight)) return 1;
 
@@ -325,8 +322,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const r = document.querySelector('input[name="minify-level"]:checked');
         return r ? parseInt(r.value) : 4;
     }
-    function applyLevel1(b) { return !b ? "" : b.split("\n").map((l) => l.replace(/\s+$/, "")).filter((l) => l.trim().length > 0).join("\n"); }
-    function applyLevel2(b) { return !b ? "" : b.split("\n").map((l) => l.replace(/^\s+/, "")).join("\n"); }
+    function applyLevel1(b) { return !b ? "" : b.split("\n").map((l) => l.replace(/\s+$/, "")).join("\n").replace(/\n{3,}/g, "\n\n"); }
+    function applyLevel2(b) { return !b ? "" : b.split("\n").filter((l) => l.trim().length > 0).join("\n"); }
 
     function removeCommentsFromText(text, type) {
         if (!text) return "";
@@ -346,6 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!text) return "";
         return text.replace(/\/\*[\s\S]*?\*\/|(?<![a-zA-Z0-9]:)\/\/[^\r\n]*/g, "");
     }
+
     function simpleRemoveCSSComments(text) {
         if (!text) return "";
         return text.replace(/\/\*[\s\S]*?\*\//g, "");
@@ -353,21 +351,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function applyBasicMinification(body, level, type) {
         let pb = body;
-        if (level >= 1) pb = applyLevel1(pb);
-        if (level >= 2 && pb.trim()) {
-            if (type !== 'yaml' && type !== 'md') {
-                pb = applyLevel2(pb);
-            }
+
+        if (level >= 1) {
+            pb = applyLevel1(pb);
         }
+
+        if (level >= 2) {
+            pb = applyLevel2(pb);
+        }
+
         if (level >= 3 && pb.trim()) {
             pb = removeCommentsFromText(pb, type);
-            pb = applyLevel1(pb);
+            pb = applyLevel2(pb);
+
             if (pb.trim() && type !== 'yaml' && type !== 'md') {
-                pb = applyLevel2(pb);
+                pb = pb.split('\n').map(line => line.replace(/^\s+/, '')).join('\n');
             }
         }
+
         return pb;
     }
+
     function applyJSFallbackMinification(originalBody, level) {
         let body = applyBasicMinification(originalBody, level, "js");
         if (level === 4 && body.trim()) {
@@ -375,6 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return body;
     }
+
     function applyCSSFallbackMinification(originalBody, level) {
         let body = applyBasicMinification(originalBody, level, "css");
         if (level === 4 && body.trim()) {
@@ -389,6 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return body;
     }
+
     function formatOutput(h, pb) {
         const th = h.trimEnd(), tb = pb.trim();
         if (!th && !tb) return "";
@@ -396,6 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!tb) return th;
         return `${th}\n${tb}`;
     }
+
     async function minifyJS(code, level) {
         let { header, body: originalBody } = extractLine1Comments(code, "js");
         let processedBody = originalBody;
@@ -412,19 +419,20 @@ document.addEventListener("DOMContentLoaded", () => {
             DETECT_REGEX.JS_KEYWORD.test(trimmedBodyForCheck.substring(0, 500)) ||
             DETECT_REGEX.JS_OPERATOR.test(trimmedBodyForCheck);
 
-        if (level === 1) {
-            processedBody = applyLevel1(processedBody);
-        } else if (level >= 2) {
+        if (level === 1 || level === 2) {
+            processedBody = applyBasicMinification(originalBody, level, "js");
+        }
+        else if (level >= 3) {
             if (looksLikeJsOrJson && typeof window.Terser === "object" && typeof window.Terser.minify === "function") {
                 try {
                     const terserOptions = {
                         ecma: 2020, sourceMap: false,
-                        format: { beautify: false, semicolons: true, comments: level >= 3 ? false : "all" },
-                        compress: level >= 3 ? {
+                        format: { beautify: false, semicolons: true, comments: false }, // Comments are removed at level 3+
+                        compress: {
                             dead_code: true, conditionals: true, booleans: true, loops: true, unused: true,
                             if_return: true, join_vars: true, sequences: level === 4, passes: level === 4 ? 2 : 1,
                             drop_console: level === 4
-                        } : false,
+                        },
                         mangle: level === 4
                     };
                     const result = await window.Terser.minify({ "input.js": originalBody }, terserOptions);
@@ -457,6 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return formatOutput(header, processedBody.trim());
     }
+
     function minifyCSS(code, level) {
         let { header, body: originalBody } = extractLine1Comments(code, "css");
         let processedBody = originalBody;
@@ -500,33 +509,36 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof processedBody !== "string") processedBody = originalBody;
         return formatOutput(header, processedBody.trim());
     }
+
     async function minifyHTML(code, level) {
         let { header, body: originalBody } = extractLine1Comments(code, "html");
         let processedBody = originalBody;
         const hasContent = originalBody && typeof originalBody.trim === "function" && originalBody.trim();
 
-        if (!hasContent && level > 1) {
+        if (!hasContent) {
             return formatOutput(header, "");
         }
 
-        if (level === 1) processedBody = applyLevel1(processedBody);
-        else if (level >= 2) {
+        // Levels 1 & 2: Use our simple, manual minification which respects indentation.
+        if (level === 1 || level === 2) {
+            processedBody = applyBasicMinification(originalBody, level, "html");
+        }
+        // Levels 3 & 4: Use the powerful HTMLMinifier library for aggressive optimization.
+        else if (level >= 3) {
             if (hasContent && typeof window.HTMLMinifier === "object" && typeof window.HTMLMinifier.minify === "function") {
                 try {
                     const htmlMinifierOptions = {
                         html5: true, decodeEntities: true,
-                        removeComments: level >= 3,
-                        collapseWhitespace: level >= 2,
-                        conservativeCollapse: level === 2,
-                        preserveLineBreaks: level === 2,
-                        collapseInlineTagWhitespace: level >= 3,
+                        removeComments: true, // Level 3+
+                        collapseWhitespace: true, // Level 3+
+                        collapseInlineTagWhitespace: true, // Level 3+
                         removeRedundantAttributes: level === 4,
-                        removeScriptTypeAttributes: level >= 3,
-                        removeStyleLinkTypeAttributes: level >= 3,
+                        removeScriptTypeAttributes: true, // Level 3+
+                        removeStyleLinkTypeAttributes: true, // Level 3+
                         removeOptionalTags: level === 4,
                         collapseBooleanAttributes: level === 4,
                         removeAttributeQuotes: level === 4,
-                        removeEmptyAttributes: level >= 3,
+                        removeEmptyAttributes: true, // Level 3+
                         minifyJS: level === 3 ? simpleRemoveJSComments : (level === 4 ? true : false),
                         minifyCSS: level === 3 ? simpleRemoveCSSComments : (level === 4 ? true : false),
                         sortAttributes: level === 4,
@@ -564,6 +576,7 @@ document.addEventListener("DOMContentLoaded", () => {
             timeoutId = setTimeout(() => func.apply(this, args), delay);
         };
     }
+
     function getHighlightJsLanguage(typeForHighlight) {
         switch (typeForHighlight) {
             case "js": return "javascript";
@@ -578,6 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
             default: return "plaintext";
         }
     }
+
     function updateHighlight(sourceText, highlightCodeElement, langToHighlight, highlightPreElement) {
         if (!highlightCodeElement || !window.hljs || !highlightPreElement) return;
         const mappedLang = getHighlightJsLanguage(langToHighlight);
@@ -720,6 +734,7 @@ document.addEventListener("DOMContentLoaded", () => {
             toggleWordWrapButton.title = isWordWrapEnabled ? "Disable Word Wrap" : "Enable Word Wrap";
         }
     }
+
     function toggleWordWrap() {
         isWordWrapEnabled = !isWordWrapEnabled;
         localStorage.setItem(UI_CONSTANTS.LOCAL_STORAGE_WORD_WRAP_KEY, String(isWordWrapEnabled));
@@ -730,14 +745,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (inputArea && inputHighlightCode) updateHighlight(inputArea.value, inputHighlightCode, effectiveType, inputHighlightArea);
         if (outputArea && outputHighlightCode) updateHighlight(outputArea.value, outputHighlightCode, effectiveType, outputHighlightArea);
     }
+
     function initializeWordWrap() {
         isWordWrapEnabled = localStorage.getItem(UI_CONSTANTS.LOCAL_STORAGE_WORD_WRAP_KEY) === "true";
         applyWordWrapState();
     }
+
     function getTimestampSuffix() {
         const n = new Date();
         return `${String(n.getFullYear()).slice(-2)}${String(n.getMonth() + 1).padStart(2, "0")}${String(n.getDate()).padStart(2, "0")}${String(n.getHours()).padStart(2, "0")}${String(n.getMinutes()).padStart(2, "0")}`;
     }
+
     function extractFilenameFromHeaderComment(textInput) {
         if (!textInput) return null;
         const { header: h } = extractLine1Comments(textInput, "none");
@@ -761,23 +779,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (inputArea) {
-        inputArea.addEventListener("input", () => {
+        const handleManualInputChange = async (isImmediate = false) => {
             uploadedFilenameBase = null;
-            debouncedMinifyAndUpdateCounts();
+
+            if (manualTypeSelector && manualTypeSelector.value !== "auto") {
+                manualTypeSelector.value = "auto";
+                isManualTypeOverrideActive = false;
+                localStorage.setItem(UI_CONSTANTS.LOCAL_STORAGE_MANUAL_TYPE_KEY, "auto");
+            }
+
+            if (isImmediate) {
+                await minifyCode();
+                debouncedUpdateInputHighlight();
+            } else {
+                debouncedMinifyAndUpdateCounts();
+            }
+        };
+
+        inputArea.addEventListener("input", () => {
+            handleManualInputChange(false);
         });
+
         inputArea.addEventListener("focus", updateCustomPlaceholderVisibility);
         inputArea.addEventListener("blur", updateCustomPlaceholderVisibility);
-        inputArea.addEventListener("paste", (event) => {
-            setTimeout(async () => {
-                uploadedFilenameBase = null;
-                await minifyCode();
-                if (inputArea && inputHighlightCode && inputHighlightArea) {
-                    updateHighlight(inputArea.value, inputHighlightCode, effectiveType, inputHighlightArea);
-                }
-            }, 0);
+
+        inputArea.addEventListener("paste", () => {
+            setTimeout(() => handleManualInputChange(true), 0);
         });
+
         inputArea.addEventListener("scroll", () => syncScroll(inputArea, inputLineGutter, inputHighlightArea));
     }
+
     if (outputArea) outputArea.addEventListener("scroll", () => syncScroll(outputArea, outputLineGutter, outputHighlightArea));
 
     if (minifyLevelSelectorWrapper) {
@@ -816,7 +848,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-
     if (copyButton && copyIconContainer && originalCopyIconPath) {
         copyButton.addEventListener("click", () => {
             if (copyButton.disabled || !outputArea || !outputArea.value.trim()) return;
@@ -830,6 +861,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+
     if (downloadButton) {
         downloadButton.addEventListener("click", () => {
             if (downloadButton.disabled || !outputArea || !outputArea.value) return;
@@ -875,6 +907,7 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => { downloadButton.title = "Download Minified File"; }, UI_CONSTANTS.FEEDBACK_MESSAGE_TIMEOUT_MS);
         });
     }
+
     if (clearInputButton) {
         clearInputButton.addEventListener("click", () => {
             if (clearInputButton.disabled || !inputArea) return;
@@ -910,19 +943,23 @@ document.addEventListener("DOMContentLoaded", () => {
                         return;
                     }
                 }
+
                 reader.onload = async (evt) => {
                     const fileContent = evt.target.result;
                     if (inputArea) inputArea.value = fileContent;
 
-                    if (manualTypeSelector) manualTypeSelector.value = "auto";
+                    if (manualTypeSelector) {
+                        manualTypeSelector.value = "auto";
+                    }
                     isManualTypeOverrideActive = false;
-                    localStorage.removeItem(UI_CONSTANTS.LOCAL_STORAGE_MANUAL_TYPE_KEY);
+                    localStorage.setItem(UI_CONSTANTS.LOCAL_STORAGE_MANUAL_TYPE_KEY, "auto");
 
                     await minifyCode();
                     if (inputArea && inputHighlightCode && inputHighlightArea) {
                         updateHighlight(inputArea.value, inputHighlightCode, effectiveType, inputHighlightArea);
                     }
                 };
+
                 reader.onerror = (evt) => {
                     showTemporaryStatusMessage("Error reading file. See console for details.", true);
                     uploadedFilenameBase = null;
@@ -932,6 +969,7 @@ document.addEventListener("DOMContentLoaded", () => {
             e.target.value = null;
         });
     }
+
     if (toggleWordWrapButton) toggleWordWrapButton.addEventListener("click", toggleWordWrap);
 
     const debouncedResizeGutterUpdate = debounce(() => {
