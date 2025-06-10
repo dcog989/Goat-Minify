@@ -8,7 +8,7 @@
  * @author Chase McGoat
  * @createdAt 2025-04-20
  * @lastModified 2025-06-06
- * @version 1.3.0
+ * @version 1.3.1
  */
 document.addEventListener("DOMContentLoaded", () => {
     const inputArea = document.getElementById("input-area");
@@ -339,16 +339,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return text;
     }
 
-    function simpleRemoveJSComments(text) {
-        if (!text) return "";
-        return text.replace(/\/\*[\s\S]*?\*\/|(?<![a-zA-Z0-9]:)\/\/[^\r\n]*/g, "");
-    }
-
-    function simpleRemoveCSSComments(text) {
-        if (!text) return "";
-        return text.replace(/\/\*[\s\S]*?\*\//g, "");
-    }
-
     function applyBasicMinification(body, level, type) {
         let pb = body;
 
@@ -539,8 +529,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         collapseBooleanAttributes: level === 4,
                         removeAttributeQuotes: level === 4,
                         removeEmptyAttributes: true, // Level 3+
-                        minifyJS: level === 3 ? simpleRemoveJSComments : (level === 4 ? true : false),
-                        minifyCSS: level === 3 ? simpleRemoveCSSComments : (level === 4 ? true : false),
+                        minifyJS: level === 3 ? (text) => applyBasicMinification(text, 3, 'js') : (level === 4 ? true : false),
+                        minifyCSS: level === 3 ? (text) => applyBasicMinification(text, 3, 'css') : (level === 4 ? true : false),
                         sortAttributes: level === 4,
                         sortClassName: level === 4
                     };
