@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goat Minify</title>
+    <link rel="stylesheet" href="./css/GoatMinify.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+
+<body>
+    <header class="page-header">
+        <img src="favicon.svg" alt="Goat Minify Logo" class="header-logo">
+        <div class="header-type-info">
+            <div class="manual-type-control">
+                <label for="manual-type-selector">Content Type:</label>
+                <select id="manual-type-selector" title="Manually select code type">
+                </select>
+            </div>
+            <span id="type-display-output">Detected Type: <span class="detected-type-value" style="font-weight: bold;">None</span></span>
+        </div>
+        <h1>Goat Minify</h1>
+    </header>
+
+    <div class="editor-container">
+        <div class="textarea-wrapper input-wrapper">
+            <input type="file" id="file-input-hidden" accept=".txt,.html,.css,.js,.json,.xml,.svg,.yaml,.yml,.toml,.md,.markdown" style="display: none;">
+            <div class="editor-area">
+                <div class="line-number-gutter" id="input-line-gutter"></div>
+                <pre class="hljs-highlight-layer" id="input-highlight-area" aria-hidden="true"><code class="hljs"></code></pre>
+                <textarea id="input-area" aria-label="Input Code Area"></textarea>
+            </div>
+            <div id="custom-placeholder" class="custom-placeholder">Paste your content here...</div>
+            <button id="upload-file-button" title="Upload File" onclick="document.getElementById('file-input-hidden').click();">
+                <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                    <path d="M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z" />
+                </svg>
+            </button>
+            <button id="clear-input-button" title="Clear Input">
+                <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                    <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
+                </svg>
+            </button>
+            <div class="counts-bar">
+                <span id="input-line-count">Lines: 0</span>
+                <span id="input-char-count">Chars: 0</span>
+            </div>
+        </div>
+
+        <div class="level-selector-column">
+            <button id="toggle-word-wrap-button" title="Enable Word Wrap">
+                <svg class="icon-svg" viewBox="0 0 24 24">
+                    <path d="M4 6h16M4 10h16M4 14h10m5 0l-3 3m0-6l3 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+            <span class="level-selector-label top">Max Minify</span>
+            <div class="level-buttons-ui-wrapper" id="minify-level-selector">
+                <div class="level-button-wrapper">
+                    <input type="radio" name="minify-level" id="minify-level-4" value="4" checked>
+                    <label for="minify-level-4" class="level-button" data-level="4" title="Maximumm minification, aggressive library optimizations, CSS restructuring.">4</label>
+                </div>
+                <div class="level-button-wrapper">
+                    <input type="radio" name="minify-level" id="minify-level-3" value="3">
+                    <label for="minify-level-3" class="level-button" data-level="3" title="Basic minification, comments removed.">3</label>
+                </div>
+                <div class="level-button-wrapper">
+                    <input type="radio" name="minify-level" id="minify-level-2" value="2">
+                    <label for="minify-level-2" class="level-button" data-level="2" title="Whitespace optimized, remove all empty lines.">2</label>
+                </div>
+                <div class="level-button-wrapper">
+                    <input type="radio" name="minify-level" id="minify-level-1" value="1">
+                    <label for="minify-level-1" class="level-button" data-level="1" title="Remove trailing whitespace + multi-empty lines.">1</label>
+                </div>
+            </div>
+            <span class="level-selector-label bottom">Min Minify</span>
+        </div>
+
+        <div class="textarea-wrapper output-wrapper">
+            <div class="editor-area">
+                <div class="line-number-gutter" id="output-line-gutter"></div>
+                <pre class="hljs-highlight-layer" id="output-highlight-area" aria-hidden="true"><code class="hljs"></code></pre>
+                <textarea id="output-area" placeholder="Minified output will appear here..." readonly aria-label="Output Code Area"></textarea>
+            </div>
+            <button id="download-button" title="Download Minified File">
+                <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                    <path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z" />
+                </svg>
+            </button>
+            <button id="copy-button" title="Copy to Clipboard">
+                <svg class="icon-svg" id="copy-icon-svg-path-container" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                    <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-720v480-480Z" />
+                </svg>
+            </button>
+            <div class="counts-bar">
+                <span id="output-line-count">Lines: 0</span>
+                <span id="output-char-count">Chars: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha512-EBLzUL8XLl+va/zAsmXwS7Z2B1F9HUHkZwyS/VKwh3S7T/U0nF4BaU29EP/ZSf6zgiIxYAnKLu6bJ8dqpmX5uw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/css.min.js" integrity="sha512-fQhadp2Av4sRhTYd9TEggQW4NrosThwDUXIMLin90uepvmCZG0mRTdPVtHujrXD22qMTtdQlrAEdvWocezI8ow==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/javascript.min.js" integrity="sha512-yfJUrNGEC39mHLjZ37CZG69Ij9Vnan7NHxXVuuBxafgfk4F+n7j/NhNWtyhKGTYEgWfgUqzPYMZJZY1HIsPCbQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/xml.min.js" integrity="sha512-G6iETlA7Rg1Z7KZFmG68IxKR81lXlDYESQ3wxy/aeKHaowjIHBGG03C79OveDgTsBN6h/2GNtQFNi8QDOAgmHg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/json.min.js" integrity="sha512-f2/ljYb/tG4fTHu6672tyNdoyhTIpt4N1bGrBE8ZjwIgrjDCd+rljLpWCZ2Vym9PBWQy2Tl9O22Pp2rMOMvH4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/yaml.min.js" integrity="sha512-Y8GzCpg2u9P2M//u+lBP4ogNs3YtllnXlOlintElAyphfK8vOHAju9MlnDakr64cMa9ARpO1IUs51FjwY33g2Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/markdown.min.js" integrity="sha512-j4HfSOGvYNRQiq8wvftDi9oVmhSqJuh2dALD+Btn53looHt+e1aaNX9gcQsnUAi42694fFhmmU4fx8nzs6VN7Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/ini.min.js" integrity="sha512-7OGJTjLbP6mkGuHzs279+Y3WoqYLiB+pdYYabyUq6H2jnm2jFpg4NSiXQwc4RL2GTi1tQd2LyQVrmEmrNxaalw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/csso@5.0.5/dist/csso.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-minifier-terser@7.2.0/dist/htmlminifier.umd.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/terser@5.40.0/dist/bundle.min.js"></script>
+    <script src="./js/GoatMinify.js"></script>
+</body>
+
+</html>
