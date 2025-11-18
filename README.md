@@ -1,18 +1,74 @@
 # Goat Minify
 
-Minify JS, CSS, HTML, XML, JSON, and more. Auto detect or manually select type. Choose minify level. Download or copy output.
+A powerful client-side code minification tool supporting JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown. Features a user-friendly interface with syntax highlighting, auto-detection, and drag-and-drop support.
 
-![Screenshot 2025-06-05 170650](https://github.com/user-attachments/assets/649cf8b8-e879-4ba4-8a5d-390c2967e714)
+## 🚀 Features
 
-## Usage
+- **Multi-Language Support**: Minifies JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown.
+- **Privacy First**: 100% client-side processing. Your code never leaves your browser.
+- **Smart Detection**: Automatically identifies code type with manual override options.
+- **Accessibility**: Full keyboard navigation, screen reader support (ARIA), and high-contrast compatibility.
+- **Developer Friendly**:
+  - Syntax highlighting (Highlight.js)
+  - Line numbers and gutters
+  - File drag-and-drop
+  - Minification levels (1-4)
+  - Copy/Download utilities
 
-[Run it](https://rawcdn.githack.com/dcog989/Goat-Minify/82b0a77cee95508a6569b4d92c309047d95eb1d8/Goat%20Minify.html) or [download it](https://github.com/dcog989/Goat-Minify/archive/refs/heads/main.zip) to run it locally.
+## 🛠️ Installation & Development
 
-## Credits
+This project uses [Vite](https://vitejs.dev/) for development.
 
-Makes use of:
+1. **Install Dependencies**
 
-- https://github.com/highlightjs/highlight.js
-- https://github.com/css/csso
-- https://github.com/terser/html-minifier-terser
-- https://github.com/terser/terser
+   ```bash
+   npm install
+   ```
+
+2. **Start Development Server**
+
+   ```bash
+   npm run dev
+   ```
+
+   Visit `http://localhost:3000`
+
+3. **Build for Production**
+
+   ```bash
+   npm run build
+   ```
+
+4. **Run Tests**
+
+   ```bash
+   npm test
+   ```
+
+## 🏗️ Project Structure
+
+```
+├── css/
+│   ├── stylish.css       # Main themes and layout
+│   └── accessibility.css # ARIA, focus, and motion handling
+├── js/
+│   ├── GoatMinify.improved.js  # Main application logic (ES Module)
+│   └── modules/                # Modular components
+│       ├── constants.js
+│       ├── detector.js
+│       └── utils.js
+└── index.html
+```
+
+## 📚 Credits
+
+Built with:
+
+- [highlight.js](https://github.com/highlightjs/highlight.js)
+- [CSSO](https://github.com/css/csso)
+- [html-minifier-terser](https://github.com/terser/html-minifier-terser)
+- [Terser](https://github.com/terser/terser)
+
+## License
+
+MIT

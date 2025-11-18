@@ -1,0 +1,80 @@
+/* Accessibility Enhancements for GoatMinify.css */
+
+/* Screen reader only content - visually hidden but accessible to assistive technology */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus visible improvements for keyboard navigation */
+*:focus-visible {
+    outline: 2px solid var(--border-color-focus);
+    outline-offset: 2px;
+}
+
+/* Ensure buttons have visible focus states */
+button:focus-visible {
+    outline: 2px solid var(--border-color-focus);
+    outline-offset: 2px;
+}
+
+/* Skip to main content link for keyboard users */
+.skip-to-main {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--color-bg-page-primary);
+    color: var(--color-text-primary);
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+}
+
+.skip-to-main:focus {
+    top: 0;
+}
+
+/* Improve contrast for better readability */
+@media (prefers-contrast: high) {
+    :root {
+        --color-text-primary: #fff;
+        --color-text-secondary: #ddd;
+        --border-color-primary: #999;
+    }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .page-header,
+    .level-selector-column,
+    button {
+        display: none;
+    }
+    
+    .editor-container {
+        flex-direction: column;
+    }
+    
+    .textarea-wrapper {
+        page-break-inside: avoid;
+    }
+}
