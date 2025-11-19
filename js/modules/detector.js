@@ -15,7 +15,7 @@ export function detectCodeType(code, uploadedFilename = null) {
     const trimmedCode = code.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
     if (!trimmedCode) return "none";
 
-    const firstK = trimmedCode.substring(0, 3000); // Increased sample size for accuracy
+    const firstK = trimmedCode.substring(0, 3000);
 
     // File extension hints (Strong signal)
     if (uploadedFilename) {
@@ -65,17 +65,11 @@ function detectFromContent(trimmedCode, firstK) {
     if (DETECT_REGEX.SVG.test(firstK) && /<\/svg\s*>$/i.test(trimmedCode)) return "svg";
 
     // 2. Markdown Strong Signals
-    // Check these early because MD often contains snippets of other languages.
-    // If it has Frontmatter (--- at start), it's almost certainly MD (or YAML, but context implies MD usually).
     if (firstK.startsWith("---") && /\n---/.test(firstK)) return "md";
-    
-    // If it has Fenced Code Blocks (```), it's Markdown.
     if (DETECT_REGEX.MARKDOWN_CODE_BLOCK.test(firstK)) return "md";
-    
-    // If it has standard Headers (# Title) AND Links/Lists, it's Markdown.
     if (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) && (DETECT_REGEX.MARKDOWN_LIST.test(firstK) || DETECT_REGEX.MARKDOWN_LINK.test(firstK))) return "md";
 
-    // 3. JSON (Strict Validation)
+    // 3. JSON
     try {
         if (trimmedCode.startsWith("{") || trimmedCode.startsWith("[")) {
             JSON.parse(trimmedCode);
@@ -83,34 +77,31 @@ function detectFromContent(trimmedCode, firstK) {
         }
     } catch (e) { /* Not JSON */ }
 
-    // 4. CSS
-    // Must check before JS because some JS regex might match CSS selectors loosely
+    // 4. JavaScript (Strong Keywords)
+    // MOVED UP: Check JS before CSS because JS objects/classes often look like CSS rules.
+    // The Regex now handles exclusions for CSS vars (var(--x)) and imports (@import)
+    if (DETECT_REGEX.JS_STRONG_KEYWORDS.test(firstK)) {
+        return "js";
+    }
+    
+    // Specific JS structures that confuse CSS regex
+    if (/\bclass\s+[a-zA-Z0-9_]+\s*\{/.test(firstK)) return "js"; // class MyClass {
+    if (/=>/.test(firstK)) return "js"; // Arrow functions
+
+    // 5. CSS
     if (DETECT_REGEX.CSS_AT_RULE.test(firstK)) return "css"; // @media, @import
     if (DETECT_REGEX.CSS_RULE.test(trimmedCode) && trimmedCode.includes("{") && trimmedCode.includes(":")) return "css";
 
-    // 5. JavaScript (Strong Keywords)
-    // We check for reserved keywords appearing as whole words
-    const strongJsKeywords = /\b(function|const|let|var|return|if|else|while|for|switch|console|window|document|export|import|class)\b/;
-    if (strongJsKeywords.test(firstK)) {
-        // Disambiguate: CSS @import vs JS import
-        if (!/^\s*@import/.test(firstK)) return "js";
-    }
-
     // 6. HTML (Weaker check)
-    // If we haven't matched strict HTML yet, check for tag-soup
     if (DETECT_REGEX.HTML.test(firstK)) return "html";
 
-    // 7. Data Configs (YAML/TOML)
+    // 7. Data Configs
     if (DETECT_REGEX.YAML_START.test(firstK) || (DETECT_REGEX.YAML_KEY_VALUE.test(firstK) && DETECT_REGEX.YAML_LIST_ITEM.test(firstK))) return "yaml";
     if (DETECT_REGEX.TOML_TABLE.test(firstK) && DETECT_REGEX.TOML_KEY_VALUE.test(firstK)) return "toml";
 
-    // 8. Markdown (Weak Fallback)
-    // If it looks like a list or has links but didn't match strong signals above
+    // 8. Fallbacks
     if (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) || DETECT_REGEX.MARKDOWN_LIST.test(firstK)) return "md";
-
-    // 9. JS (Weak Fallback)
-    // Arrow functions, operators
-    if (/=>/.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode)) return "js";
+    if (DETECT_REGEX.JS_KEYWORD.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode)) return "js";
 
     return "none";
 }
@@ -129,7 +120,6 @@ export function extractLine1Comments(code, type) {
     if (type === "yaml" || type === "toml") {
         commentPattern = /^\s*(#(?!!)[^\r\n]*)/;
     } else if (type === "md") {
-        // Handle YAML frontmatter in Markdown
         const fmMatch = code.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
         if (fmMatch) {
             header = fmMatch[0];

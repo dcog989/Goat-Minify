@@ -11,11 +11,18 @@ export const UI_CONSTANTS = {
     EMPTY_STATE_CLASS: "empty-state",
     HIDDEN_CLASS: "hidden",
     ACTIVE_CLASS: "active",
-    DEBOUNCE_DELAY_MS: 400,
-    HIGHLIGHT_DEBOUNCE_DELAY_MS: 150,
+    
+    // Adjusted for performance
+    DEBOUNCE_DELAY_MS: 500, // Slower debounce for heavy minification tasks
+    HIGHLIGHT_DEBOUNCE_DELAY_MS: 300, // Smoother typing experience
+    
     FEEDBACK_MESSAGE_TIMEOUT_MS: 1500,
     STATUS_MESSAGE_TIMEOUT_MS: 3000,
     DEFAULT_MINIFY_LEVEL_ID: "minify-level-4",
+    
+    // Performance limits
+    MAX_HIGHLIGHT_LEN: 50000, // Disable syntax highlighting for files > 50KB to prevent freezing
+    
     ACCEPTED_FILE_EXTENSIONS: ["js", "css", "html", "txt", "json", "xml", "svg", "yaml", "yml", "toml", "md", "markdown"],
     DEFAULT_HIGHLIGHT_COLOR: "var(--color-text-highlight)",
     ERROR_HIGHLIGHT_COLOR: "red",
@@ -23,7 +30,7 @@ export const UI_CONSTANTS = {
 };
 
 export const DETECT_REGEX = {
-    // HTML: Stricter check. Requires DOCTYPE, html tag, body tag, or strict closing tags to avoid matching Markdown text like "<br>"
+    // HTML
     HTML: /<!DOCTYPE\s+html|<html\s*[\s>]|<body\s*[\s>]|<\/(html|body|div|span|p|table|script|style)>|<(script|style|div|span|p|table)\b[^>]*>/i,
     
     // XML/SVG
@@ -39,6 +46,12 @@ export const DETECT_REGEX = {
     JS_KEYWORD: /\b(function|class|let|const|var|if|for|while|switch|return|async|await|import|export|yield|=>|document|window|console)\b/i,
     JS_OPERATOR: /(===?|!==?|&&|\|\||\+\+|--(?![a-zA-Z<])|\*\*|[+\-*/%&|^!~<>?]=?)/,
     
+    // Precompiled strong keywords for faster detection
+    // 1. Exclude CSS selectors like .class, #return using lookbehind (?<![.#])
+    // 2. Exclude CSS variables like var(--x) by ensuring 'var' isn't followed by '('
+    // 3. Exclude CSS imports like @import by ensuring 'import' isn't preceded by '@'
+    JS_STRONG_KEYWORDS: /(?<![.#])\b(function|const|let|return|if|else|while|for|switch|console|window|export|class)\b|(?<![.#])\bvar\b(?!\s*\()|(?<![@])\bimport\b/,
+    
     // YAML
     YAML_START: /^%YAML|---\s*$/m,
     YAML_KEY_VALUE: /^\s*([a-zA-Z0-9_.-]+)\s*:\s*(.*)/m,
@@ -49,17 +62,11 @@ export const DETECT_REGEX = {
     TOML_KEY_VALUE: /^\s*([a-zA-Z0-9_.-]+)\s*=\s*(["']|true|false|[0-9]|\[|\{)/m,
     
     // MARKDOWN
-    // Frontmatter: Starts with --- on first line
     MARKDOWN_FRONTMATTER: /^---\s*$/m,
-    // Headers: # Title (at start of line)
     MARKDOWN_HEADER: /^#{1,6}\s+.+$/m,
-    // Lists: * item, - item, 1. item
     MARKDOWN_LIST: /^[\s\t]*(\*|\+|\-|\d+\.)\s+\S+/m,
-    // Code Blocks: ``` or ~~~
     MARKDOWN_CODE_BLOCK: /^[\s\t]*(`{3,}|~{3,})/m,
-    // Links/Images: [text](url)
     MARKDOWN_LINK: /!{0,1}\[.*?\]\(.*?\)/,
-    // Formatting: **bold**, *italic*
     MARKDOWN_FORMAT: /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3/,
 };
 

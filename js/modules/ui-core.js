@@ -22,15 +22,33 @@ hljs.registerLanguage('yaml', yaml);
 hljs.registerLanguage('ini', ini); // Handles TOML
 hljs.registerLanguage('markdown', markdown);
 
-// Import the theme
 import 'highlight.js/styles/github-dark.min.css';
 
 let measurementHelperDiv = null;
 
 /**
- * Calculate visual lines for wrapped text
+ * Calculate visual lines for wrapped text.
+ * Optimized to use cached styles to reduce getComputedStyle calls.
  */
-function getVisualLineCountForLogicalLine(logicalLineText, textarea) {
+function getVisualLineCountForLogicalLine(logicalLineText, stylesCache, measurementHelper) {
+    // Ensure width is updated
+    if (measurementHelper.style.width !== stylesCache.width) {
+        measurementHelper.style.width = stylesCache.width;
+    }
+
+    measurementHelper.textContent = logicalLineText.length === 0 ? "\u00A0" : logicalLineText;
+
+    // Reading scrollHeight forces layout, but we've minimized style recalc overhead upstream
+    const scrollHeight = measurementHelper.scrollHeight;
+    
+    if (stylesCache.singleLineHeight === 0) return 1;
+    return Math.max(1, Math.round((scrollHeight + 0.001) / stylesCache.singleLineHeight));
+}
+
+/**
+ * Prepare measurement helper and extract styles once
+ */
+function getMeasurementContext(textarea) {
     if (!measurementHelperDiv) {
         measurementHelperDiv = document.createElement("div");
         Object.assign(measurementHelperDiv.style, {
@@ -40,25 +58,23 @@ function getVisualLineCountForLogicalLine(logicalLineText, textarea) {
         });
         document.body.appendChild(measurementHelperDiv);
     }
-    
-    const styles = getComputedStyle(textarea);
-    Object.assign(measurementHelperDiv.style, {
-        fontFamily: styles.fontFamily, fontSize: styles.fontSize,
-        lineHeight: styles.lineHeight, whiteSpace: "pre-wrap",
-        wordBreak: styles.wordBreak
-    });
-    
-    const paddingX = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
-    const width = textarea.clientWidth - paddingX;
 
-    measurementHelperDiv.style.width = `${Math.max(0, width)}px`;
-    measurementHelperDiv.textContent = logicalLineText.length === 0 ? "\u00A0" : logicalLineText;
+    const computed = getComputedStyle(textarea);
+    const paddingX = (parseFloat(computed.paddingLeft) || 0) + (parseFloat(computed.paddingRight) || 0);
+    const width = (textarea.clientWidth - paddingX) + "px";
+    const singleLineHeight = parseFloat(computed.lineHeight) || (parseFloat(computed.fontSize) * 1.4);
 
-    const scrollHeight = measurementHelperDiv.scrollHeight;
-    const singleLineHeight = parseFloat(styles.lineHeight) || (parseFloat(styles.fontSize) * 1.4);
+    // Apply font styles to helper once
+    measurementHelperDiv.style.fontFamily = computed.fontFamily;
+    measurementHelperDiv.style.fontSize = computed.fontSize;
+    measurementHelperDiv.style.lineHeight = computed.lineHeight;
+    measurementHelperDiv.style.whiteSpace = "pre-wrap";
+    measurementHelperDiv.style.wordBreak = computed.wordBreak;
 
-    if (singleLineHeight === 0 || isNaN(singleLineHeight)) return 1;
-    return Math.max(1, Math.round((scrollHeight + 0.001) / singleLineHeight));
+    return {
+        helper: measurementHelperDiv,
+        styles: { width, singleLineHeight }
+    };
 }
 
 export const UI = {
@@ -79,8 +95,7 @@ export const UI = {
         const logicalLines = textarea.value.split("\n");
         const logicalLineCount = logicalLines.length;
         
-        // Cache check
-        const cacheKey = `${textarea.value.length}-${isWordWrapEnabled}`;
+        const cacheKey = `${textarea.value.length}-${isWordWrapEnabled}-${textarea.clientWidth}`;
         if (gutterEl.dataset.cacheKey === cacheKey && gutterEl.dataset.textareaValue === textarea.value) {
              this.syncScroll(textarea, gutterEl, highlightAreaEl);
              return;
@@ -88,10 +103,14 @@ export const UI = {
 
         let newGutterTextContent = "";
         if (isWordWrapEnabled) {
+            // Get context once before the loop to avoid layout thrashing
+            const context = getMeasurementContext(textarea);
+            
             let linesForGutter = [];
             for (let i = 0; i < logicalLineCount; i++) {
                 let lineDisplay = [(i + 1).toString()];
-                const numVisualLines = getVisualLineCountForLogicalLine(logicalLines[i], textarea);
+                // Pass context to helper
+                const numVisualLines = getVisualLineCountForLogicalLine(logicalLines[i], context.styles, context.helper);
                 for (let j = 1; j < numVisualLines; j++) lineDisplay.push("");
                 linesForGutter.push(lineDisplay.join('\n'));
             }
@@ -115,6 +134,13 @@ export const UI = {
         if (!codeEl || !preEl) return;
         
         preEl.className = `hljs-highlight-layer ${isWordWrapEnabled ? UI_CONSTANTS.WORD_WRAP_ENABLED_CLASS : UI_CONSTANTS.WORD_WRAP_DISABLED_CLASS}`;
+
+        // Performance Check: Skip syntax highlighting for very large files
+        if (sourceText.length > UI_CONSTANTS.MAX_HIGHLIGHT_LEN) {
+            codeEl.textContent = sourceText;
+            codeEl.className = 'hljs'; // Basic styling only
+            return;
+        }
 
         let hljsLang = 'plaintext';
         switch(lang) {
@@ -141,10 +167,6 @@ export const UI = {
         }
     },
 
-    /**
-     * Sets raw content immediately to the background layer.
-     * Critical for "invisible text" prevention before syntax highlighting runs.
-     */
     setRawHighlightContent(codeEl, content) {
         if (codeEl) {
             codeEl.textContent = content;
