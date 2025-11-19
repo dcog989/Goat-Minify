@@ -7,12 +7,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
     root: '.',
+    // FIX: Set base to repository name for GitHub Pages support
+    base: '/Goat-Minify/',
+    
     define: {
-        // Fix ReferenceError: __filename/global is not defined
-        // process is now handled in index.html
         global: 'globalThis',
         __filename: '""',
         __dirname: '""',
+        'process.env': {},
+        'process.platform': '"browser"',
     },
     plugins: [
         {
@@ -34,24 +37,17 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            // 1. Internal Alias for the real URL package
             'original-url': path.resolve(__dirname, 'node_modules/url'),
-
-            // 2. Node Stubs/Polyfills
             'fs/promises': path.resolve(__dirname, 'js/modules/fs-stub.js'),
             fs: path.resolve(__dirname, 'js/modules/fs-stub.js'),
             url: path.resolve(__dirname, 'js/modules/url-stub.js'),
             os: path.resolve(__dirname, 'js/modules/os-stub.js'),
-            
-            // 3. Force Absolute Paths for Polyfills
             path: path.resolve(__dirname, 'node_modules/path-browserify'),
             util: path.resolve(__dirname, 'node_modules/util'),
             events: path.resolve(__dirname, 'node_modules/events'),
             process: path.resolve(__dirname, 'node_modules/process/browser.js'),
             buffer: path.resolve(__dirname, 'node_modules/buffer'),
             stream: path.resolve(__dirname, 'node_modules/stream-browserify'),
-            
-            // 4. Library Specific Aliases
             'html-minifier-terser-bundle': path.resolve(__dirname, 'node_modules/html-minifier-terser/dist/htmlminifier.umd.bundle.min.js')
         }
     },
