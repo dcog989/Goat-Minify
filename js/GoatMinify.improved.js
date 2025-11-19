@@ -3,17 +3,27 @@
  * @description Enhanced client-side minifier with modular architecture
  * @license MIT
  * @author Chase McGoat
- * @version 2.1.0
+ * @version 2.5.0-polyfills
  */
+
+// 1. Load Polyfills FIRST
+import './modules/polyfills.js';
 
 import { UI_CONSTANTS, ICONS } from './modules/constants.js';
 import { debounce, formatOutput, sanitizeFilename, getTimestampSuffix } from './modules/utils.js';
 import { detectCodeType, extractLine1Comments } from './modules/detector.js';
 import { storage } from './modules/storage.js';
 import { UI } from './modules/ui-core.js';
-import { minifyJS, minifyCSS, minifyHTML, applyBasicMinification } from './modules/minification-engines.js';
+import { 
+    minifyJS, 
+    minifyCSS, 
+    minifyHTML, 
+    applyBasicMinification
+} from './modules/minification-engines.js';
 
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM loaded. App starting...");
+
     // =======================
     // DOM Element References
     // =======================
@@ -113,6 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function performMinification() {
+        console.log("Processing...");
         if (!DOM.inputArea) return;
         const currentCode = DOM.inputArea.value;
 
@@ -145,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     minifiedCode = formatOutput(header, await minifyJS(body, level));
                     break;
                 case "css":
-                    minifiedCode = formatOutput(header, minifyCSS(body, level));
+                    minifiedCode = formatOutput(header, await minifyCSS(body, level));
                     break;
                 case "html":
                 case "svg":
@@ -157,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     break;
             }
         } catch (error) {
-            console.error(error);
+            console.error("Minify Error:", error);
             showTemporaryStatusMessage("Minification error. Output may be incomplete.", true);
             minifiedCode = currentCode;
         }
@@ -229,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function setupEventListeners() {
         if (DOM.inputArea) {
             DOM.inputArea.addEventListener("input", () => {
-                // Immediate visual update
+                // Immediate visual update to background layer
                 UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
 
                 state.uploadedFilenameBase = null;
@@ -242,6 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             DOM.inputArea.addEventListener("paste", () => {
                 setTimeout(() => {
+                    // Immediate visual update on paste
                     UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
                     performMinification();
                 }, 0);
@@ -393,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
             handleEmptyInput();
         }
 
-        console.log('🐐 Goat Minify v2.1.0 - Modular Version Loaded');
+        console.log('🐐 Goat Minify v2.4.1 Initialized');
     }
 
     init();

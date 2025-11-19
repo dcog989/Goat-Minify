@@ -42,7 +42,7 @@ button:focus-visible {
 }
 
 /* Improve contrast for better readability */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     :root {
         --color-text-primary: #fff;
         --color-text-secondary: #ddd;

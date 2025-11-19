@@ -1,9 +1,15 @@
 /**
  * @file minification-engines.js
- * @description Minification logic for different languages
+ * @description Minification logic using Pure JS tools (Terser, PostCSS/cssnano, HTMLMinifier)
  */
 
 import { DETECT_REGEX } from './constants.js';
+import { minify as terserMinify } from 'terser';
+import { minify as htmlMinify } from 'html-minifier-terser-bundle';
+
+// PostCSS & cssnano
+import postcss from 'postcss';
+import cssnano from 'cssnano';
 
 function applyLevel1(b) { return !b ? "" : b.split("\n").map((l) => l.replace(/\s+$/, "")).join("\n").replace(/\n{3,}/g, "\n\n"); }
 function applyLevel2(b) { return !b ? "" : b.split("\n").filter((l) => l.trim().length > 0).join("\n"); }
@@ -54,20 +60,22 @@ export async function minifyJS(originalBody, level) {
                             DETECT_REGEX.JS_KEYWORD.test(trimmedBodyForCheck.substring(0, 500));
 
     if (level >= 3) {
-        if (looksLikeJsOrJson && window.Terser?.minify) {
+        if (looksLikeJsOrJson) {
             try {
-                const result = await window.Terser.minify({ "input.js": originalBody }, {
+                const result = await terserMinify(originalBody, {
                     ecma: 2020, sourceMap: false,
                     format: { beautify: false, semicolons: true, comments: false },
                     compress: {
                         dead_code: true, conditionals: true, booleans: true, loops: true, unused: true,
-                        if_return: true, join_vars: true, sequences: level === 4, passes: level === 4 ? 2 : 1,
-                        drop_console: level === 4
+                        if_return: true, join_vars: true, 
+                        sequences: level === 4, 
+                        passes: level === 4 ? 2 : 1,
+                        drop_console: level === 4,
+                        unsafe: level === 4
                     },
                     mangle: level === 4
                 });
                 if (result.code) return result.code;
-                throw new Error(result.error || "Unknown Terser error");
             } catch (e) {
                 console.warn("Terser failed, falling back:", e);
             }
@@ -76,20 +84,22 @@ export async function minifyJS(originalBody, level) {
     return applyFallbackMinification(originalBody, level, "js");
 }
 
-export function minifyCSS(originalBody, level) {
+export async function minifyCSS(originalBody, level) {
     if (!originalBody.trim() && level > 1) return "";
     
-    if (level >= 3 && window.csso?.minify) {
+    if (level >= 3) {
         try {
-            const result = window.csso.minify(originalBody, {
-                comments: false,
-                restructure: level === 4,
-                forceMediaMerge: level === 4
-            });
-            if (result?.css) return result.css;
-            throw new Error("CSSO failed");
+            const presetConfig = level === 4 
+                ? { preset: ['default', { discardComments: { removeAll: true }, normalizeWhitespace: true }] }
+                : { preset: ['default', { discardComments: false }] };
+
+            const result = await postcss([
+                cssnano(presetConfig)
+            ]).process(originalBody, { from: undefined });
+
+            if (result && result.css) return result.css;
         } catch (e) {
-            console.warn("CSSO failed, falling back:", e);
+            console.warn("cssnano failed, falling back:", e);
         }
     }
     return applyFallbackMinification(originalBody, level, "css");
@@ -98,17 +108,30 @@ export function minifyCSS(originalBody, level) {
 export async function minifyHTML(originalBody, level) {
     if (!originalBody.trim()) return "";
 
-    if (level >= 3 && window.HTMLMinifier?.minify) {
+    if (level >= 3) {
         try {
-            return await window.HTMLMinifier.minify(originalBody, {
-                html5: true, decodeEntities: true,
-                removeComments: true, collapseWhitespace: true, collapseInlineTagWhitespace: true,
-                removeRedundantAttributes: level === 4, removeScriptTypeAttributes: true,
-                removeStyleLinkTypeAttributes: true, removeOptionalTags: level === 4,
-                collapseBooleanAttributes: level === 4, removeAttributeQuotes: level === 4,
-                removeEmptyAttributes: true, sortAttributes: level === 4, sortClassName: level === 4,
-                minifyJS: level >= 3, minifyCSS: level >= 3
-            });
+            const options = {
+                html5: true,
+                decodeEntities: true,
+                removeComments: true,
+                collapseWhitespace: true,
+                collapseInlineTagWhitespace: true,
+                
+                removeRedundantAttributes: level === 4,
+                removeScriptTypeAttributes: true,
+                removeStyleLinkTypeAttributes: true,
+                removeOptionalTags: level === 4,
+                collapseBooleanAttributes: level === 4,
+                removeAttributeQuotes: level === 4,
+                removeEmptyAttributes: true,
+                sortAttributes: level === 4,
+                sortClassName: level === 4,
+                
+                minifyJS: level >= 3,
+                minifyCSS: level >= 3
+            };
+            
+            return await htmlMinify(originalBody, options);
         } catch (e) {
             console.warn("HTMLMinifier failed, falling back:", e);
         }

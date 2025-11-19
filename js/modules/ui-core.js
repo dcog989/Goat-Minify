@@ -4,6 +4,26 @@
  */
 
 import { UI_CONSTANTS } from './constants.js';
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+import css from 'highlight.js/lib/languages/css';
+import xml from 'highlight.js/lib/languages/xml';
+import json from 'highlight.js/lib/languages/json';
+import yaml from 'highlight.js/lib/languages/yaml';
+import ini from 'highlight.js/lib/languages/ini';
+import markdown from 'highlight.js/lib/languages/markdown';
+
+// Register only necessary languages to save bundle size
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('css', css);
+hljs.registerLanguage('xml', xml); // Handles HTML, SVG, XML
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('yaml', yaml);
+hljs.registerLanguage('ini', ini); // Handles TOML
+hljs.registerLanguage('markdown', markdown);
+
+// Import the theme
+import 'highlight.js/styles/github-dark.min.css';
 
 let measurementHelperDiv = null;
 
@@ -111,22 +131,27 @@ export const UI = {
             codeEl.textContent = "";
             codeEl.className = 'hljs';
         } else {
-            if (window.hljs) {
-                try {
-                    const res = window.hljs.highlight(sourceText, { language: hljsLang, ignoreIllegals: true });
-                    codeEl.innerHTML = res.value;
-                    codeEl.className = `hljs language-${hljsLang}`;
-                } catch (e) {
-                    codeEl.textContent = sourceText;
-                }
-            } else {
+            try {
+                const res = hljs.highlight(sourceText, { language: hljsLang, ignoreIllegals: true });
+                codeEl.innerHTML = res.value;
+                codeEl.className = `hljs language-${hljsLang}`;
+            } catch (e) {
                 codeEl.textContent = sourceText;
             }
         }
     },
 
+    /**
+     * Sets raw content immediately to the background layer.
+     * Critical for "invisible text" prevention before syntax highlighting runs.
+     */
     setRawHighlightContent(codeEl, content) {
-        if (codeEl) codeEl.textContent = content;
+        if (codeEl) {
+            codeEl.textContent = content;
+            if (!codeEl.classList.contains('hljs')) {
+                codeEl.classList.add('hljs');
+            }
+        }
     },
 
     updateCounts(inputMap, outputMap) {
