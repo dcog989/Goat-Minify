@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { minify as minifyHtml } from 'html-minifier-terser';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -11,18 +12,38 @@ export default defineConfig({
         __filename: '""',
         __dirname: '""',
         'process.env': {},
-        'process.cwd': '(() => "/")',
         'process.platform': '"browser"',
     },
+    plugins: [
+        {
+            name: 'minify-index-html',
+            enforce: 'post',
+            async transformIndexHtml(html) {
+                return await minifyHtml(html, {
+                    collapseWhitespace: true,
+                    removeComments: true,
+                    removeRedundantAttributes: true,
+                    removeScriptTypeAttributes: true,
+                    removeStyleLinkTypeAttributes: true,
+                    useShortDoctype: true,
+                    minifyCSS: true,
+                    minifyJS: true
+                });
+            }
+        }
+    ],
     resolve: {
         alias: {
-            // 1. Local Stubs
+            // 1. Internal Alias for the real URL package
+            'original-url': path.resolve(__dirname, 'node_modules/url'),
+
+            // 2. Node Stubs/Polyfills
             'fs/promises': path.resolve(__dirname, 'js/modules/fs-stub.js'),
             fs: path.resolve(__dirname, 'js/modules/fs-stub.js'),
             url: path.resolve(__dirname, 'js/modules/url-stub.js'),
-
-            // 2. Force Absolute Paths for Polyfills (Fixes "externalized" warnings)
-            // Using path.resolve ensures Vite picks the installed package, not its internal stub.
+            os: path.resolve(__dirname, 'js/modules/os-stub.js'),
+            
+            // 3. Force Absolute Paths for Polyfills
             path: path.resolve(__dirname, 'node_modules/path-browserify'),
             util: path.resolve(__dirname, 'node_modules/util'),
             events: path.resolve(__dirname, 'node_modules/events'),
@@ -30,13 +51,14 @@ export default defineConfig({
             buffer: path.resolve(__dirname, 'node_modules/buffer'),
             stream: path.resolve(__dirname, 'node_modules/stream-browserify'),
             
-            // 3. Library Specific Aliases
+            // 4. Library Specific Aliases
             'html-minifier-terser-bundle': path.resolve(__dirname, 'node_modules/html-minifier-terser/dist/htmlminifier.umd.bundle.min.js')
         }
     },
     build: {
         outDir: 'dist',
         minify: 'terser',
+        chunkSizeWarningLimit: 4000,
         rollupOptions: {
             input: {
                 main: 'index.html',

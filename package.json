@@ -1,6 +1,6 @@
 {
   "name": "goat-minify",
-  "version": "2.4.1",
+  "version": "2.4.3",
   "description": "Client-side code minification tool supporting JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown",
   "type": "module",
   "scripts": {

@@ -4,7 +4,8 @@
  * to prevent PostCSS/CSSNano from complaining in the browser.
  */
 
-import * as urlPolyfill from 'url';
+// Import from the alias defined in vite.config.js to avoid circular dependency
+import * as urlPolyfill from 'original-url';
 
 // PostCSS uses these to resolve file paths, which don't exist in the browser.
 // We stub them to return safe strings.
@@ -14,7 +15,12 @@ export const fileURLToPath = (url) => {
 };
 
 export const pathToFileURL = (path) => {
-    return new URL('file://' + path);
+    // Safe stub for browser environment
+    try {
+        return new URL('file://' + path);
+    } catch (e) {
+        return new URL('file:///unknown');
+    }
 };
 
 // Export everything else from the standard polyfill
