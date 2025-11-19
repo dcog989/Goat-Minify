@@ -1,12 +1,7 @@
 /**
  * @file storage.js
- * @description Safe wrapper for localStorage operations
+ * @description Safe wrapper for localStorage operations to handle quotas and disabled storage
  */
-
-import { UI_CONSTANTS } from './constants.js';
-
-// Helper to create temporary status messages (circular dependency avoidance requires passing the shower function or simple console fallback)
-// For simplicity in this module, we'll log errors to console, as UI feedback happens in the main controller.
 
 export const storage = {
     get(key, defaultValue = null) {
@@ -14,7 +9,8 @@ export const storage = {
             const value = localStorage.getItem(key);
             return value !== null ? value : defaultValue;
         } catch (e) {
-            console.warn(`Failed to read ${key} from localStorage:`, e);
+            // Storage might be disabled (e.g. private mode) or restricted
+            console.warn(`[Storage] Read failed for ${key}:`, e);
             return defaultValue;
         }
     },
@@ -24,8 +20,20 @@ export const storage = {
             localStorage.setItem(key, String(value));
             return true;
         } catch (e) {
-            console.error(`Failed to save ${key} to localStorage:`, e);
+            if (e.name === 'QuotaExceededError') {
+                console.error('[Storage] Quota exceeded');
+            } else {
+                console.error(`[Storage] Write failed for ${key}:`, e);
+            }
             return false;
         }
     },
+
+    remove(key) {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            console.warn(`[Storage] Remove failed for ${key}:`, e);
+        }
+    }
 };

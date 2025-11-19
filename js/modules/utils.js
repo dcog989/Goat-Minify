@@ -58,5 +58,40 @@ export function formatOutput(header, body) {
  * @returns {string} Sanitized filename
  */
 export function sanitizeFilename(filename) {
-    return filename.replace(/[^\w.-]/g, "_").replace(/_{2,}/g, "_");
+    // Remove path traversal and unsafe characters
+    const name = filename.replace(/^.*[\\\/]/, ''); 
+    return name.replace(/[^\w.-]/g, "_").replace(/_{2,}/g, "_");
+}
+
+/**
+ * Attempt to extract a filename from the file header comments
+ * @param {string} content - File content
+ * @returns {string|null} Extracted filename or null
+ */
+export function extractFilenameFromContent(content) {
+    if (!content) return null;
+    // Limit search to first 500 chars to avoid regex DoS on massive files
+    const header = content.slice(0, 500);
+    
+    const patterns = [
+        // C-style block comments: /* filename.js */
+        /\/\*!?\s*([\w.-]+\.\w+)\s*\*\//,
+        // C-style line comments: // filename.js
+        /\/\/!?\s*([\w.-]+\.\w+)/,
+        // HTML comments: <!-- filename.html -->
+        /<!--!?\s*([\w.-]+\.\w+)\s*-->/,
+        // Hash comments: # filename.yaml
+        /#\s*([\w.-]+\.\w+)/
+    ];
+
+    for (const regex of patterns) {
+        const match = header.match(regex);
+        if (match && match[1]) {
+            // Validate extension presence
+            if (match[1].includes('.')) {
+                return sanitizeFilename(match[1]);
+            }
+        }
+    }
+    return null;
 }

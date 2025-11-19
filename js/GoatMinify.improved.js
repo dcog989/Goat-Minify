@@ -3,14 +3,15 @@
  * @description Enhanced client-side minifier with modular architecture
  * @license MIT
  * @author Chase McGoat
- * @version 2.5.0-polyfills
+ * @version 2.5.0
  */
 
 // 1. Load Polyfills FIRST
 import './modules/polyfills.js';
 
+// 2. Load other modules
 import { UI_CONSTANTS, ICONS } from './modules/constants.js';
-import { debounce, formatOutput, sanitizeFilename, getTimestampSuffix } from './modules/utils.js';
+import { debounce, formatOutput, sanitizeFilename, getTimestampSuffix, extractFilenameFromContent } from './modules/utils.js';
 import { detectCodeType, extractLine1Comments } from './modules/detector.js';
 import { storage } from './modules/storage.js';
 import { UI } from './modules/ui-core.js';
@@ -18,7 +19,7 @@ import {
     minifyJS, 
     minifyCSS, 
     minifyHTML, 
-    applyBasicMinification
+    applyBasicMinification 
 } from './modules/minification-engines.js';
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -318,9 +319,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!DOM.outputArea?.value) return;
                 const timestamp = getTimestampSuffix();
                 const ext = state.effectiveType === "none" ? "txt" : state.effectiveType;
-                const base = state.uploadedFilenameBase 
-                    ? state.uploadedFilenameBase.substring(0, state.uploadedFilenameBase.lastIndexOf("."))
-                    : "GoatMinify";
+                
+                let base = "GoatMinify";
+                const extractedName = extractFilenameFromContent(DOM.inputArea?.value || "");
+                
+                if (extractedName) {
+                    if (extractedName.toLowerCase().endsWith('.' + ext)) {
+                        base = extractedName.substring(0, extractedName.lastIndexOf('.'));
+                    } else {
+                        base = extractedName;
+                    }
+                } else if (state.uploadedFilenameBase) {
+                    base = state.uploadedFilenameBase.substring(0, state.uploadedFilenameBase.lastIndexOf("."));
+                }
                 
                 const filename = `${sanitizeFilename(base)}-min-${timestamp}.${ext}`;
                 
@@ -343,15 +354,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 const file = e.target.files[0];
                 if (!file) return;
                 if (file.size > 10 * 1024 * 1024) {
-                    if(!confirm("File is large (>10MB). Processing may freeze the browser. Continue?")) return;
+                    if(!confirm("File is large (>10MB). Processing may freeze the browser. Continue?")) {
+                        e.target.value = null;
+                        return;
+                    }
                 }
+
+                // Show loading state
+                if (DOM.inputArea) {
+                    DOM.inputArea.value = "Loading...";
+                    DOM.inputArea.disabled = true;
+                }
+                showTemporaryStatusMessage("Reading file...", false);
+
                 const reader = new FileReader();
                 reader.onload = (evt) => {
                     if (DOM.inputArea) {
                         DOM.inputArea.value = evt.target.result;
+                        DOM.inputArea.disabled = false;
                         state.uploadedFilenameBase = file.name;
+                        
                         UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
-                        performMinification();
+                        
+                        // Process next tick to update UI
+                        setTimeout(() => {
+                            performMinification();
+                            showTemporaryStatusMessage("File loaded", false);
+                        }, 10);
+                    }
+                };
+                reader.onerror = () => {
+                    showTemporaryStatusMessage("Error reading file", true);
+                    if (DOM.inputArea) {
+                        DOM.inputArea.value = "";
+                        DOM.inputArea.disabled = false;
                     }
                 };
                 reader.readAsText(file);
@@ -405,7 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
             handleEmptyInput();
         }
 
-        console.log('🐐 Goat Minify v2.4.1 Initialized');
+        console.log('🐐 Goat Minify v2.5.0 Initialized');
     }
 
     init();
