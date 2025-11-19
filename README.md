@@ -8,7 +8,6 @@ Try it out now: [https://github.com/dcog989/Goat-Minify](https://github.com/dcog
 
 ![Goat Minify Version](https://img.shields.io/badge/version-2.5.0-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
-
 ## 🚀 Features
 
 - **Privacy First**: All processing happens locally using Web Workers and bundled compilers.
