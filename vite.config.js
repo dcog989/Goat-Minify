@@ -8,11 +8,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
     root: '.',
     define: {
+        // Fix ReferenceError: __filename/global is not defined
+        // process is now handled in index.html
         global: 'globalThis',
         __filename: '""',
         __dirname: '""',
-        'process.env': {},
-        'process.platform': '"browser"',
     },
     plugins: [
         {
@@ -63,6 +63,14 @@ export default defineConfig({
             input: {
                 main: 'index.html',
             },
+            output: {
+                manualChunks: (id) => {
+                    if (id.includes('node_modules/highlight.js')) return 'vendor-highlight';
+                    if (id.includes('node_modules/terser')) return 'vendor-terser';
+                    if (id.includes('node_modules/postcss') || id.includes('node_modules/cssnano')) return 'vendor-postcss';
+                    if (id.includes('node_modules/html-minifier-terser')) return 'vendor-htmlmin';
+                }
+            }
         },
         commonjsOptions: {
             transformMixedEsModules: true,

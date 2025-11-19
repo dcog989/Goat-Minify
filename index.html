@@ -5,10 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Goat Minify</title>
-    <link rel="stylesheet" href="./css/stylish.css">
-    <link rel="stylesheet" href="./css/accessibility.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
+    <meta name="description" content="Goat Minify is a client-side code minification tool for CSS, HTML, JS, SVG, JSON, XAML, etc.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <!-- Polyfill Globals immediately to prevent library crashes -->
+    <script>
+        window.process = {
+            env: {},
+            version: 'v16.0.0',
+            versions: {},
+            platform: 'browser',
+            cwd: function() { return '/'; }
+        };
+        window.global = window;
+    </script>
 </head>
 
 <body>

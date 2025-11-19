@@ -1,10 +1,15 @@
 /**
  * @file polyfills.js
- * @description Injects Node.js globals into the browser window object.
- * Required for libraries like cssnano, postcss, and browserslist.
+ * @description Injects Buffer into the browser window object.
+ * Note: process is now handled in index.html to ensure earliest execution.
  */
 
 import { Buffer } from 'buffer';
+
+// Inject Buffer for libraries that rely on it (like browserslist/cssnano)
+if (!window.Buffer) {
+    window.Buffer = Buffer;
+}
 import process from 'process';
 
 // Inject globals

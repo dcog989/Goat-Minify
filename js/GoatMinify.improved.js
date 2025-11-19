@@ -3,10 +3,12 @@
  * @description Enhanced client-side minifier with modular architecture
  * @license MIT
  * @author Chase McGoat
- * @version 2.5.0
+ * @version 2.5.2
  */
 
-// 1. Load Polyfills FIRST
+// 1. Load Styles & Polyfills FIRST
+import '../css/stylish.css';
+import '../css/accessibility.css';
 import './modules/polyfills.js';
 
 // 2. Load other modules
@@ -19,7 +21,8 @@ import {
     minifyJS, 
     minifyCSS, 
     minifyHTML, 
-    applyBasicMinification 
+    applyBasicMinification,
+    preloadEngines
 } from './modules/minification-engines.js';
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -421,6 +424,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function init() {
+        setupEventListeners();
+
         const savedWrap = storage.get(UI_CONSTANTS.LOCAL_STORAGE_WORD_WRAP_KEY);
         if (savedWrap === "true") {
             state.isWordWrapEnabled = true;
@@ -432,7 +437,13 @@ document.addEventListener("DOMContentLoaded", () => {
             DOM.manualTypeSelector.value = savedType;
         }
 
-        setupEventListeners();
+        // Background Preloading:
+        // Wait for the main thread to be idle (after UI paint), then load the heavy engines.
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => preloadEngines());
+        } else {
+            setTimeout(() => preloadEngines(), 500);
+        }
         
         if (DOM.inputArea?.value.trim()) {
             UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
@@ -441,7 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
             handleEmptyInput();
         }
 
-        console.log('🐐 Goat Minify v2.5.0 Initialized');
+        console.log('🐐 Goat Minify v2.5.2 Initialized');
     }
 
     init();
