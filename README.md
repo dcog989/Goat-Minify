@@ -1,49 +1,76 @@
 # Goat Minify
 
-A powerful client-side code minification tool supporting JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown. Features a user-friendly interface with syntax highlighting, auto-detection, and drag-and-drop support.
+![Goat Minify Version](https://img.shields.io/badge/version-2.5.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+**Goat Minify** is a client-side code minification tool. It runs entirely in your browser, ensuring maximum privacy and speed.
+
+It supports **JavaScript, CSS, HTML, XML, JSON, YAML, TOML, and Markdown**, featuring auto-detection, syntax highlighting, and granular compression levels.
 
 ## 🚀 Features
 
-- **Multi-Language Support**: Minifies JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown.
-- **Privacy First**: 100% client-side processing. Your code never leaves your browser.
-- **Smart Detection**: Automatically identifies code type with manual override options.
-- **Accessibility**: Full keyboard navigation, screen reader support (ARIA), and high-contrast compatibility.
-- **Developer Friendly**:
-  - Syntax highlighting (Highlight.js)
-  - Line numbers and gutters
-  - File drag-and-drop
-  - Minification levels (1-4)
-  - Copy/Download utilities
+- **Privacy First**: All processing happens locally using Web Workers and bundled compilers.
+- **Multi-Language**:
+  - **JS/JSON**: Powered by [Terser](https://github.com/terser/terser).
+  - **CSS**: Powered by [PostCSS](https://postcss.org/) + [cssnano](https://cssnano.co/).
+  - **HTML/XML/SVG**: Powered by [html-minifier-terser](https://github.com/terser/html-minifier-terser).
+  - **Data (YAML/TOML)**: Structure-aware whitespace removal.
+  - **Markdown**: Frontmatter preservation and whitespace optimization.
+- **Smart Detection**: Heuristic analysis to detect code type (even without file extensions).
+- **Developer Experience**:
+  - Syntax Highlighting (Highlight.js) with line numbers.
+  - Drag-and-drop file upload.
+  - Minification Levels (1-4) for fine-grained control.
+- **Accessibility**: Fully accessible (ARIA support, keyboard navigation, high contrast compatibility).
 
-## 🛠️ Installation & Development
+## 🛠️ Development
 
-This project uses [Vite](https://vitejs.dev/) for development.
+This project is built with **Vite 7** and utilizes a modular ES6 architecture.
 
-1. **Install Dependencies**
+### Prerequisites
 
-   ```bash
-   npm install
-   ```
+- Node.js (v18 or higher recommended)
 
-2. **Start Development Server**
+### Installation
 
-   ```bash
-   npm run dev
-   ```
+1. Clone the repository:
 
-   Visit `http://localhost:3000`
+    ```bash
+    git clone https://github.com/dcog989/Goat-Minify.git
+    cd Goat-Minify
+    ```
 
-3. **Build for Production**
+2. Install dependencies:
 
-   ```bash
-   npm run build
-   ```
+    ```bash
+    npm install
+    ```
 
-4. **Run Tests**
+3. Start the development server:
 
-   ```bash
-   npm test
-   ```
+    ```bash
+    npm run dev
+    ```
+
+    Open the URL shown in the terminal (usually `http://localhost:3000`).
+
+### Build for Production
+
+To create a deployable static site:
+
+```bash
+npm run build
+```
+
+The output will be in the `dist/` folder.
+
+### Preview Production Build
+
+To test the production build locally (verifying bundle loading and polyfills):
+
+```bash
+npm run preview
+```
 
 ## 🏗️ Project Structure
 
@@ -52,22 +79,41 @@ This project uses [Vite](https://vitejs.dev/) for development.
 │   ├── stylish.css       # Main themes and layout
 │   └── accessibility.css # ARIA, focus, and motion handling
 ├── js/
-│   ├── GoatMinify.improved.js  # Main application logic (ES Module)
-│   └── modules/                # Modular components
-│       ├── constants.js
-│       ├── detector.js
-│       └── utils.js
+│   ├── GoatMinify.improved.js  # Main entry point
+│   └── modules/
+│       ├── constants.js        # Regex patterns and config
+│       ├── detector.js         # Language detection logic
+│       ├── minification-engines.js # Interface to compilers (Terser/PostCSS)
+│       ├── polyfills.js        # Node.js environment shims for browser
+│       ├── storage.js          # Safe localStorage wrapper
+│       ├── ui-core.js          # UI manipulation (highlights, scrolling)
+│       ├── utils.js            # Debounce, formatting helpers
+│       ├── fs-stub.js          # Virtual file system for cssnano
+│       ├── os-stub.js          # Virtual OS module
+│       └── url-stub.js         # Virtual URL module
+├── vite.config.js              # Build configuration & polyfill mapping
 └── index.html
 ```
 
+## 📦 Deployment
+
+This is a **Static Web App**. You can deploy the `dist/` folder to any static host:
+
+- **GitHub Pages**: (Recommended) Push to a `gh-pages` branch or use a GitHub Action.
+- **Netlify / Vercel / Cloudflare Pages**: Drag and drop the `dist` folder.
+- **Apache / Nginx**: Upload contents to your web root.
+
+**Note**: You cannot run the `index.html` directly via the file system (`file://`) due to browser security restrictions on ES Modules. You must serve it via a web server.
+
 ## 📚 Credits
 
-Built with:
+Built on the shoulders of giants:
 
-- [highlight.js](https://github.com/highlightjs/highlight.js)
-- [CSSO](https://github.com/css/csso)
+- [Vite](https://vitejs.dev/)
+- [Highlight.js](https://highlightjs.org/)
+- [Terser](https://terser.org/)
+- [cssnano](https://cssnano.co/)
 - [html-minifier-terser](https://github.com/terser/html-minifier-terser)
-- [Terser](https://github.com/terser/terser)
 
 ## License
 
