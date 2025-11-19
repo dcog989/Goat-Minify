@@ -59,26 +59,18 @@ function detectFromExtension(ext, trimmedCode, firstK) {
  * @private
  */
 function detectFromContent(trimmedCode, firstK) {
+    // 1. Markup Languages (Strongest signals)
+    
     // SVG (must have both opening and closing tags)
     if (DETECT_REGEX.SVG.test(firstK) && /<\/svg\s*>$/i.test(trimmedCode)) return "svg";
     
     // HTML
     if (DETECT_REGEX.HTML.test(firstK)) return "html";
     
-    // CSS
-    if (DETECT_REGEX.CSS_RULE.test(trimmedCode) || DETECT_REGEX.CSS_AT_RULE.test(firstK) || DETECT_REGEX.CSS_VAR.test(firstK)) return "css";
-    
-    // YAML (strong indicators)
-    if (DETECT_REGEX.YAML_START.test(firstK) || (DETECT_REGEX.YAML_KEY_VALUE.test(firstK) && DETECT_REGEX.YAML_LIST_ITEM.test(firstK))) return "yaml";
-    if (DETECT_REGEX.YAML_KEY_VALUE.test(trimmedCode) && trimmedCode.split('\n').length > 2) return "yaml";
-    
-    // TOML
-    if (DETECT_REGEX.TOML_TABLE.test(firstK) || DETECT_REGEX.TOML_KEY_VALUE.test(firstK)) return "toml";
-    
     // XML (not HTML)
     if (DETECT_REGEX.XML.test(firstK) && !DETECT_REGEX.HTML.test(firstK)) return "xml";
     
-    // JSON (strict validation)
+    // 2. JSON (Strict validation)
     try {
         JSON.parse(trimmedCode);
         if (trimmedCode.length > 2 && 
@@ -90,11 +82,41 @@ function detectFromContent(trimmedCode, firstK) {
     } catch (e) {
         // Not JSON
     }
+
+    // 3. Strong JavaScript Indicators
+    // Check this BEFORE CSS because CSS regex is loose and matches "if (x) { }"
+    const strongJsKeywords = /\b(function|const|let|return|if|else|while|for|switch|console|window|document|export|import)\b/;
+    if (strongJsKeywords.test(firstK)) {
+        // Edge case: CSS @import vs JS import
+        // If the code starts with @import, it's CSS, otherwise 'import' implies JS
+        if (!/^\s*@import/.test(firstK)) {
+            // Edge case: CSS @document (deprecated but exists)
+            if (!/@document/.test(firstK)) {
+                 return "js";
+            }
+        }
+    }
     
-    // JavaScript
+    // Specific JS structures that confuse CSS regex
+    if (/\bclass\s+[a-zA-Z0-9_]+\s*\{/.test(firstK)) return "js"; // class MyClass {
+    if (/=>/.test(firstK)) return "js"; // Arrow functions
+
+    // 4. CSS
+    if (DETECT_REGEX.CSS_RULE.test(trimmedCode) || DETECT_REGEX.CSS_AT_RULE.test(firstK) || DETECT_REGEX.CSS_VAR.test(firstK)) return "css";
+    
+    // 5. Data Serialization
+    
+    // YAML (strong indicators)
+    if (DETECT_REGEX.YAML_START.test(firstK) || (DETECT_REGEX.YAML_KEY_VALUE.test(firstK) && DETECT_REGEX.YAML_LIST_ITEM.test(firstK))) return "yaml";
+    if (DETECT_REGEX.YAML_KEY_VALUE.test(trimmedCode) && trimmedCode.split('\n').length > 2) return "yaml";
+    
+    // TOML
+    if (DETECT_REGEX.TOML_TABLE.test(firstK) || DETECT_REGEX.TOML_KEY_VALUE.test(firstK)) return "toml";
+    
+    // 6. Weak JavaScript Fallback
     if (DETECT_REGEX.JS_KEYWORD.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode)) return "js";
     
-    // Markdown
+    // 7. Markdown
     if (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) || DETECT_REGEX.MARKDOWN_LIST.test(firstK) || DETECT_REGEX.MARKDOWN_LINK_IMAGE.test(firstK)) return "md";
     
     return "none";
