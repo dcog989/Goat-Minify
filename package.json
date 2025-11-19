@@ -1,6 +1,6 @@
 {
   "name": "goat-minify",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Client-side code minification tool supporting JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown",
   "type": "module",
   "scripts": {
@@ -30,13 +30,14 @@
   "author": "Chase McGoat",
   "license": "MIT",
   "devDependencies": {
-    "@vitest/ui": "^1.0.0",
-    "eslint": "^8.55.0",
-    "eslint-config-prettier": "^9.1.0",
-    "jsdom": "^23.0.0",
-    "prettier": "^3.1.1",
-    "vite": "^5.0.10",
-    "vitest": "^1.0.4"
+    "@vitest/ui": "^4.0.10",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "jsdom": "^27.1.0",
+    "prettier": "^3.6.2",
+    "vite": "^7.2.2",
+    "vitest": "^4.0.10"
   },
   "prettier": {
     "semi": true,
@@ -45,24 +46,5 @@
     "trailingComma": "es5",
     "printWidth": 120,
     "arrowParens": "always"
-  },
-  "eslintConfig": {
-    "env": {
-      "browser": true,
-      "es2021": true
-    },
-    "extends": [
-      "eslint:recommended",
-      "prettier"
-    ],
-    "parserOptions": {
-      "ecmaVersion": "latest",
-      "sourceType": "module"
-    },
-    "rules": {
-      "no-unused-vars": "warn",
-      "no-console": "off",
-      "prefer-const": "error"
-    }
   }
 }
