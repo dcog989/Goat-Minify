@@ -15,9 +15,9 @@ export function detectCodeType(code, uploadedFilename = null) {
     const trimmedCode = code.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
     if (!trimmedCode) return "none";
 
-    const firstK = trimmedCode.substring(0, 2000);
+    const firstK = trimmedCode.substring(0, 3000); // Increased sample size for accuracy
 
-    // File extension hints (if available)
+    // File extension hints (Strong signal)
     if (uploadedFilename) {
         const ext = uploadedFilename.substring(uploadedFilename.lastIndexOf(".") + 1).toLowerCase();
         const typeFromExt = detectFromExtension(ext, trimmedCode, firstK);
@@ -38,7 +38,7 @@ function detectFromExtension(ext, trimmedCode, firstK) {
             JSON.parse(trimmedCode);
             return "json";
         } catch (e) {
-            // Fallthrough to content detection
+            // Fallthrough
         }
     }
     
@@ -47,9 +47,9 @@ function detectFromExtension(ext, trimmedCode, firstK) {
     if (ext === "xml" && DETECT_REGEX.XML.test(firstK)) return "xml";
     if (ext === "css" && (DETECT_REGEX.CSS_RULE.test(trimmedCode) || DETECT_REGEX.CSS_AT_RULE.test(firstK) || DETECT_REGEX.CSS_VAR.test(firstK))) return "css";
     if (ext === "js" && (DETECT_REGEX.JS_KEYWORD.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode))) return "js";
-    if ((ext === "yaml" || ext === "yml") && (DETECT_REGEX.YAML_START.test(firstK) || DETECT_REGEX.YAML_KEY_VALUE.test(firstK) || DETECT_REGEX.YAML_LIST_ITEM.test(firstK))) return "yaml";
+    if ((ext === "yaml" || ext === "yml") && (DETECT_REGEX.YAML_START.test(firstK) || DETECT_REGEX.YAML_KEY_VALUE.test(firstK))) return "yaml";
     if (ext === "toml" && (DETECT_REGEX.TOML_TABLE.test(firstK) || DETECT_REGEX.TOML_KEY_VALUE.test(firstK))) return "toml";
-    if ((ext === "md" || ext === "markdown") && (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) || DETECT_REGEX.MARKDOWN_LIST.test(firstK) || DETECT_REGEX.MARKDOWN_LINK_IMAGE.test(firstK))) return "md";
+    if ((ext === "md" || ext === "markdown") && (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) || DETECT_REGEX.MARKDOWN_LIST.test(firstK) || DETECT_REGEX.MARKDOWN_CODE_BLOCK.test(firstK))) return "md";
     
     return null;
 }
@@ -59,66 +59,59 @@ function detectFromExtension(ext, trimmedCode, firstK) {
  * @private
  */
 function detectFromContent(trimmedCode, firstK) {
-    // 1. Markup Languages (Strongest signals)
-    
-    // SVG (must have both opening and closing tags)
+    // 1. Markup / DocType (Highest Priority)
+    if (firstK.trim().startsWith("<!DOCTYPE html") || firstK.trim().startsWith("<html")) return "html";
+    if (firstK.trim().startsWith("<?xml")) return "xml";
     if (DETECT_REGEX.SVG.test(firstK) && /<\/svg\s*>$/i.test(trimmedCode)) return "svg";
+
+    // 2. Markdown Strong Signals
+    // Check these early because MD often contains snippets of other languages.
+    // If it has Frontmatter (--- at start), it's almost certainly MD (or YAML, but context implies MD usually).
+    if (firstK.startsWith("---") && /\n---/.test(firstK)) return "md";
     
-    // HTML
-    if (DETECT_REGEX.HTML.test(firstK)) return "html";
+    // If it has Fenced Code Blocks (```), it's Markdown.
+    if (DETECT_REGEX.MARKDOWN_CODE_BLOCK.test(firstK)) return "md";
     
-    // XML (not HTML)
-    if (DETECT_REGEX.XML.test(firstK) && !DETECT_REGEX.HTML.test(firstK)) return "xml";
-    
-    // 2. JSON (Strict validation)
+    // If it has standard Headers (# Title) AND Links/Lists, it's Markdown.
+    if (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) && (DETECT_REGEX.MARKDOWN_LIST.test(firstK) || DETECT_REGEX.MARKDOWN_LINK.test(firstK))) return "md";
+
+    // 3. JSON (Strict Validation)
     try {
-        JSON.parse(trimmedCode);
-        if (trimmedCode.length > 2 && 
-            (trimmedCode.startsWith("{") || trimmedCode.startsWith("[")) &&
-            !DETECT_REGEX.JS_KEYWORD.test(firstK.substring(0, 200)) &&
-            !(DETECT_REGEX.CSS_RULE.test(trimmedCode.substring(0, 200)) && trimmedCode.includes("{") && trimmedCode.includes("}"))) {
+        if (trimmedCode.startsWith("{") || trimmedCode.startsWith("[")) {
+            JSON.parse(trimmedCode);
             return "json";
         }
-    } catch (e) {
-        // Not JSON
-    }
-
-    // 3. Strong JavaScript Indicators
-    // Check this BEFORE CSS because CSS regex is loose and matches "if (x) { }"
-    const strongJsKeywords = /\b(function|const|let|return|if|else|while|for|switch|console|window|document|export|import)\b/;
-    if (strongJsKeywords.test(firstK)) {
-        // Edge case: CSS @import vs JS import
-        // If the code starts with @import, it's CSS, otherwise 'import' implies JS
-        if (!/^\s*@import/.test(firstK)) {
-            // Edge case: CSS @document (deprecated but exists)
-            if (!/@document/.test(firstK)) {
-                 return "js";
-            }
-        }
-    }
-    
-    // Specific JS structures that confuse CSS regex
-    if (/\bclass\s+[a-zA-Z0-9_]+\s*\{/.test(firstK)) return "js"; // class MyClass {
-    if (/=>/.test(firstK)) return "js"; // Arrow functions
+    } catch (e) { /* Not JSON */ }
 
     // 4. CSS
-    if (DETECT_REGEX.CSS_RULE.test(trimmedCode) || DETECT_REGEX.CSS_AT_RULE.test(firstK) || DETECT_REGEX.CSS_VAR.test(firstK)) return "css";
-    
-    // 5. Data Serialization
-    
-    // YAML (strong indicators)
+    // Must check before JS because some JS regex might match CSS selectors loosely
+    if (DETECT_REGEX.CSS_AT_RULE.test(firstK)) return "css"; // @media, @import
+    if (DETECT_REGEX.CSS_RULE.test(trimmedCode) && trimmedCode.includes("{") && trimmedCode.includes(":")) return "css";
+
+    // 5. JavaScript (Strong Keywords)
+    // We check for reserved keywords appearing as whole words
+    const strongJsKeywords = /\b(function|const|let|var|return|if|else|while|for|switch|console|window|document|export|import|class)\b/;
+    if (strongJsKeywords.test(firstK)) {
+        // Disambiguate: CSS @import vs JS import
+        if (!/^\s*@import/.test(firstK)) return "js";
+    }
+
+    // 6. HTML (Weaker check)
+    // If we haven't matched strict HTML yet, check for tag-soup
+    if (DETECT_REGEX.HTML.test(firstK)) return "html";
+
+    // 7. Data Configs (YAML/TOML)
     if (DETECT_REGEX.YAML_START.test(firstK) || (DETECT_REGEX.YAML_KEY_VALUE.test(firstK) && DETECT_REGEX.YAML_LIST_ITEM.test(firstK))) return "yaml";
-    if (DETECT_REGEX.YAML_KEY_VALUE.test(trimmedCode) && trimmedCode.split('\n').length > 2) return "yaml";
-    
-    // TOML
-    if (DETECT_REGEX.TOML_TABLE.test(firstK) || DETECT_REGEX.TOML_KEY_VALUE.test(firstK)) return "toml";
-    
-    // 6. Weak JavaScript Fallback
-    if (DETECT_REGEX.JS_KEYWORD.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode)) return "js";
-    
-    // 7. Markdown
-    if (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) || DETECT_REGEX.MARKDOWN_LIST.test(firstK) || DETECT_REGEX.MARKDOWN_LINK_IMAGE.test(firstK)) return "md";
-    
+    if (DETECT_REGEX.TOML_TABLE.test(firstK) && DETECT_REGEX.TOML_KEY_VALUE.test(firstK)) return "toml";
+
+    // 8. Markdown (Weak Fallback)
+    // If it looks like a list or has links but didn't match strong signals above
+    if (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) || DETECT_REGEX.MARKDOWN_LIST.test(firstK)) return "md";
+
+    // 9. JS (Weak Fallback)
+    // Arrow functions, operators
+    if (/=>/.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode)) return "js";
+
     return "none";
 }
 

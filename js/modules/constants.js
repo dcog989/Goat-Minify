@@ -23,22 +23,44 @@ export const UI_CONSTANTS = {
 };
 
 export const DETECT_REGEX = {
-    HTML: /<!DOCTYPE\s+html|<html\s*[\s>]|<body\s*[\s>]|<([a-z][a-z0-9]*)\b[^>]*>/i,
-    SVG: /<svg[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"|<svg[^>]*>/i,
-    XML: /<\?xml[^?]*\?>|<([a-zA-Z0-9_:]+)\b[^>]*>/i,
+    // HTML: Stricter check. Requires DOCTYPE, html tag, body tag, or strict closing tags to avoid matching Markdown text like "<br>"
+    HTML: /<!DOCTYPE\s+html|<html\s*[\s>]|<body\s*[\s>]|<\/(html|body|div|span|p|table|script|style)>|<(script|style|div|span|p|table)\b[^>]*>/i,
+    
+    // XML/SVG
+    SVG: /<svg[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"|<svg\s+[^>]*>[\s\S]*<\/svg>/i,
+    XML: /<\?xml\s+version=['"][\d.]+['"]|<([a-zA-Z0-9_:]+)\b[^>]*>[\s\S]*<\/\1>/,
+
+    // CSS
     CSS_RULE: /(?:[.#]?-?[_a-zA-Z]+[_a-zA-Z0-9-]*|\[[^\]]+\]|::?[a-zA-Z0-9-]+(?:\([^)]+\))?)\s*\{[\s\S]*?\}/,
     CSS_AT_RULE: /@(media|keyframes|font-face|import|charset|namespace|supports|document|page|layer|property|container|scope)\b/i,
     CSS_VAR: /--[a-zA-Z0-9-]+\s*:/,
+    
+    // JS
     JS_KEYWORD: /\b(function|class|let|const|var|if|for|while|switch|return|async|await|import|export|yield|=>|document|window|console)\b/i,
     JS_OPERATOR: /(===?|!==?|&&|\|\||\+\+|--(?![a-zA-Z<])|\*\*|[+\-*/%&|^!~<>?]=?)/,
-    YAML_START: /^(%YAML|---)/m,
+    
+    // YAML
+    YAML_START: /^%YAML|---\s*$/m,
     YAML_KEY_VALUE: /^\s*([a-zA-Z0-9_.-]+)\s*:\s*(.*)/m,
     YAML_LIST_ITEM: /^\s*-\s+\S+/m,
+    
+    // TOML
     TOML_TABLE: /^\s*\[([a-zA-Z0-9_.-]+)\]\s*$/m,
     TOML_KEY_VALUE: /^\s*([a-zA-Z0-9_.-]+)\s*=\s*(["']|true|false|[0-9]|\[|\{)/m,
-    MARKDOWN_HEADER: /^(#+\s+.+|={3,}|-{3,})/m,
-    MARKDOWN_LIST: /^(\*|\+|\-|\d+\.)\s+\S+/m,
-    MARKDOWN_LINK_IMAGE: /!?\[.*?\]\(.*?\)/m,
+    
+    // MARKDOWN
+    // Frontmatter: Starts with --- on first line
+    MARKDOWN_FRONTMATTER: /^---\s*$/m,
+    // Headers: # Title (at start of line)
+    MARKDOWN_HEADER: /^#{1,6}\s+.+$/m,
+    // Lists: * item, - item, 1. item
+    MARKDOWN_LIST: /^[\s\t]*(\*|\+|\-|\d+\.)\s+\S+/m,
+    // Code Blocks: ``` or ~~~
+    MARKDOWN_CODE_BLOCK: /^[\s\t]*(`{3,}|~{3,})/m,
+    // Links/Images: [text](url)
+    MARKDOWN_LINK: /!{0,1}\[.*?\]\(.*?\)/,
+    // Formatting: **bold**, *italic*
+    MARKDOWN_FORMAT: /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3/,
 };
 
 export const ICONS = {
