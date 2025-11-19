@@ -1,11 +1,13 @@
 # Goat Minify
 
-![Goat Minify Version](https://img.shields.io/badge/version-2.5.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-
-**Goat Minify** is a client-side code minification tool. It runs entirely in your browser, ensuring maximum privacy and speed.
+**Goat Minify** is a code minification / compression tool. It runs entirely in your browser, ensuring maximum privacy and speed.
 
 It supports **JavaScript, CSS, HTML, XML, JSON, YAML, TOML, and Markdown**, featuring auto-detection, syntax highlighting, and granular compression levels.
+
+Try it out now: [https://github.com/dcog989/Goat-Minify](https://github.com/dcog989/Goat-Minify)
+
+![Goat Minify Version](https://img.shields.io/badge/version-2.5.0-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+
 
 ## 🚀 Features
 
