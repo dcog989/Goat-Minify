@@ -6,6 +6,23 @@
 import { DETECT_REGEX } from "./constants.js";
 import { normalizeLineEndings } from "./utils.js";
 
+function isValidJson(code) {
+  try {
+    JSON.parse(code);
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
+
+function looksLikeJs(firstK, trimmedCode) {
+  return DETECT_REGEX.JS_KEYWORD.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode);
+}
+
+function looksLikeMarkdown(firstK) {
+  return DETECT_REGEX.MARKDOWN_HEADER.test(firstK) || DETECT_REGEX.MARKDOWN_LIST.test(firstK);
+}
+
 /**
  * Detect code type from content
  * @param {string} code - Code content to analyze
@@ -34,14 +51,7 @@ export function detectCodeType(code, uploadedFilename = null) {
  * @private
  */
 function detectFromExtension(ext, trimmedCode, firstK) {
-  if (ext === "json") {
-    try {
-      JSON.parse(trimmedCode);
-      return "json";
-    } catch (_e) {
-      // Fallthrough
-    }
-  }
+  if (ext === "json" && isValidJson(trimmedCode)) return "json";
 
   if (ext === "svg" && DETECT_REGEX.SVG.test(firstK)) return "svg";
   if (ext === "html" && DETECT_REGEX.HTML.test(firstK)) return "html";
@@ -53,7 +63,7 @@ function detectFromExtension(ext, trimmedCode, firstK) {
       DETECT_REGEX.CSS_VAR.test(firstK))
   )
     return "css";
-  if (ext === "js" && (DETECT_REGEX.JS_KEYWORD.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode))) return "js";
+  if (ext === "js" && looksLikeJs(firstK, trimmedCode)) return "js";
   if (
     (ext === "yaml" || ext === "yml") &&
     (DETECT_REGEX.YAML_START.test(firstK) || DETECT_REGEX.YAML_KEY_VALUE.test(firstK))
@@ -63,9 +73,7 @@ function detectFromExtension(ext, trimmedCode, firstK) {
     return "toml";
   if (
     (ext === "md" || ext === "markdown") &&
-    (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) ||
-      DETECT_REGEX.MARKDOWN_LIST.test(firstK) ||
-      DETECT_REGEX.MARKDOWN_CODE_BLOCK.test(firstK))
+    (looksLikeMarkdown(firstK) || DETECT_REGEX.MARKDOWN_CODE_BLOCK.test(firstK))
   )
     return "md";
 
@@ -92,13 +100,8 @@ function detectFromContent(trimmedCode, firstK) {
     return "md";
 
   // 3. JSON
-  try {
-    if (trimmedCode.startsWith("{") || trimmedCode.startsWith("[")) {
-      JSON.parse(trimmedCode);
-      return "json";
-    }
-  } catch (_e) {
-    /* Not JSON */
+  if ((trimmedCode.startsWith("{") || trimmedCode.startsWith("[")) && isValidJson(trimmedCode)) {
+    return "json";
   }
 
   // 4. JavaScript (Strong Keywords)
@@ -128,10 +131,18 @@ function detectFromContent(trimmedCode, firstK) {
   if (DETECT_REGEX.TOML_TABLE.test(firstK) && DETECT_REGEX.TOML_KEY_VALUE.test(firstK)) return "toml";
 
   // 8. Fallbacks
-  if (DETECT_REGEX.MARKDOWN_HEADER.test(firstK) || DETECT_REGEX.MARKDOWN_LIST.test(firstK)) return "md";
-  if (DETECT_REGEX.JS_KEYWORD.test(firstK) || DETECT_REGEX.JS_OPERATOR.test(trimmedCode)) return "js";
+  if (looksLikeMarkdown(firstK)) return "md";
+  if (looksLikeJs(firstK, trimmedCode)) return "js";
 
   return "none";
+}
+
+/**
+ * Only treat a matched comment as a header if it starts at column 0
+ * (no leading whitespace).
+ */
+function commentIsAtStart(match) {
+  return match[0].indexOf(match[1]) === match[0].trimStart().indexOf(match[1]);
 }
 
 /**
@@ -161,7 +172,7 @@ export function extractLine1Comments(code, type) {
   }
 
   const match = code.match(commentPattern);
-  if (match && match[0].indexOf(match[1]) === match[0].trimStart().indexOf(match[1])) {
+  if (match && commentIsAtStart(match)) {
     header = match[0];
     body = code.substring(match[0].length);
   }
