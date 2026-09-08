@@ -26,11 +26,11 @@ Try it out now: [https://github.com/dcog989/Goat-Minify](https://github.com/dcog
 
 ## 🛠️ Development
 
-This project is built with **Vite 7** and utilizes a modular ES6 architecture.
+This project is built with **Vite 8** and utilizes a modular ES6 architecture.
 
 ### Prerequisites
 
-- Node.js (v18 or higher recommended)
+- [Bun](https://bun.sh) (v1.x or higher)
 
 ### Installation
 
@@ -44,13 +44,13 @@ This project is built with **Vite 7** and utilizes a modular ES6 architecture.
 2. Install dependencies:
 
     ```bash
-    npm install
+    bun install
     ```
 
 3. Start the development server:
 
     ```bash
-    npm run dev
+    bun run dev
     ```
 
     Open the URL shown in the terminal (usually `http://localhost:3000`).
@@ -60,7 +60,7 @@ This project is built with **Vite 7** and utilizes a modular ES6 architecture.
 To create a deployable static site:
 
 ```bash
-npm run build
+bun run build
 ```
 
 The output will be in the `dist/` folder.
@@ -70,8 +70,18 @@ The output will be in the `dist/` folder.
 To test the production build locally (verifying bundle loading and polyfills):
 
 ```bash
-npm run preview
+bun run preview
 ```
+
+## 🧰 Development Workflow
+
+- **Check**: `bun run check` (lint + format check via [Biome](https://biomejs.dev/))
+- **Format**: `bun run format`
+- **Tests**: `bun run test`
+- **Commit**: `bun run commit` (interactive, enforces [Conventional Commits](https://www.conventionalcommits.org/) via [cocogitto](https://docs.cocogitto.io/))
+- **Release**: `bun run release` (auto-bump version, changelog, and tag via cocogitto)
+
+[Lefthook](https://lefthook.dev/) runs Biome checks on staged files and validates commit messages via cocogitto before every commit.
 
 ## 🏗️ Project Structure
 
@@ -84,9 +94,11 @@ npm run preview
 │   └── modules/
 │       ├── constants.js        # Regex patterns and config
 │       ├── detector.js         # Language detection logic
+│       ├── file-handler.js     # File upload/download handling
 │       ├── minification-engines.js # Interface to compilers (Terser/PostCSS)
 │       ├── polyfills.js        # Node.js environment shims for browser
 │       ├── storage.js          # Safe localStorage wrapper
+│       ├── type-config.js      # Single source of truth for code-type config
 │       ├── ui-core.js          # UI manipulation (highlights, scrolling)
 │       ├── utils.js            # Debounce, formatting helpers
 │       ├── fs-stub.js          # Virtual file system for cssnano
