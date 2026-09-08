@@ -14,6 +14,33 @@ const engines = {
   htmlMinifier: null,
 };
 
+async function getTerser() {
+  if (!engines.terser) {
+    console.log("⏳ Waiting for Terser to load...");
+    engines.terser = (await import("terser")).minify;
+  }
+  return engines.terser;
+}
+
+async function getHtmlMinifier() {
+  if (!engines.htmlMinifier) {
+    console.log("⏳ Waiting for HTMLMinifier to load...");
+    const mod = await import("html-minifier-terser-bundle");
+    engines.htmlMinifier = mod.default.minify;
+  }
+  return engines.htmlMinifier;
+}
+
+async function getCssEngines() {
+  if (!engines.postcss || !engines.cssnano) {
+    console.log("⏳ Waiting for PostCSS/CSSNano to load...");
+    const [postcssMod, cssnanoMod] = await Promise.all([import("postcss"), import("cssnano")]);
+    engines.postcss = postcssMod.default;
+    engines.cssnano = cssnanoMod.default;
+  }
+  return engines;
+}
+
 /**
  * Trigger background loading of heavy engines.
  * Call this after the initial page render.
@@ -21,33 +48,9 @@ const engines = {
 export function preloadEngines() {
   console.log("🚀 Preloading minification engines in background...");
 
-  // Load Terser
-  if (!engines.terser) {
-    import("terser")
-      .then((mod) => {
-        engines.terser = mod.minify;
-      })
-      .catch((e) => console.warn("Preload Terser failed:", e));
-  }
-
-  // Load HTML Minifier
-  if (!engines.htmlMinifier) {
-    import("html-minifier-terser-bundle")
-      .then((mod) => {
-        engines.htmlMinifier = mod.default.minify;
-      })
-      .catch((e) => console.warn("Preload HTML failed:", e));
-  }
-
-  // Load PostCSS + CSSNano
-  if (!engines.postcss) {
-    Promise.all([import("postcss"), import("cssnano")])
-      .then(([postMod, cssMod]) => {
-        engines.postcss = postMod.default;
-        engines.cssnano = cssMod.default;
-      })
-      .catch((e) => console.warn("Preload CSS failed:", e));
-  }
+  getTerser().catch((e) => console.warn("Preload Terser failed:", e));
+  getHtmlMinifier().catch((e) => console.warn("Preload HTML failed:", e));
+  getCssEngines().catch((e) => console.warn("Preload CSS failed:", e));
 }
 
 function applyLevel1(b) {
@@ -99,7 +102,7 @@ export function applyBasicMinification(body, level, type) {
   return pb;
 }
 
-export function applyFallbackMinification(originalBody, level, type) {
+function applyFallbackMinification(originalBody, level, type) {
   let body = applyBasicMinification(originalBody, level, type);
   if (level === 4 && body.trim()) {
     if (type === "js") body = body.replace(/\n/g, " ").replace(/\s\s+/g, " ");
@@ -125,12 +128,9 @@ export async function minifyJS(originalBody, level) {
 
   if (level >= 3 && looksLikeJsOrJson) {
     try {
-      if (!engines.terser) {
-        console.log("⏳ Waiting for Terser to load...");
-        engines.terser = (await import("terser")).minify;
-      }
+      const terser = await getTerser();
 
-      const result = await engines.terser(originalBody, {
+      const result = await terser(originalBody, {
         ecma: 2020,
         sourceMap: false,
         format: { beautify: false, semicolons: true, comments: false },
@@ -162,19 +162,14 @@ export async function minifyCSS(originalBody, level) {
 
   if (level >= 3) {
     try {
-      if (!engines.postcss) {
-        console.log("⏳ Waiting for PostCSS/CSSNano to load...");
-        const [postcssMod, cssnanoMod] = await Promise.all([import("postcss"), import("cssnano")]);
-        engines.postcss = postcssMod.default;
-        engines.cssnano = cssnanoMod.default;
-      }
+      const { postcss, cssnano } = await getCssEngines();
 
       const presetConfig =
         level === 4
           ? { preset: ["default", { discardComments: { removeAll: true }, normalizeWhitespace: true }] }
           : { preset: ["default", { discardComments: false }] };
 
-      const result = await engines.postcss([engines.cssnano(presetConfig)]).process(originalBody, { from: undefined });
+      const result = await postcss([cssnano(presetConfig)]).process(originalBody, { from: undefined });
 
       if (result?.css) return result.css;
     } catch (e) {
@@ -189,11 +184,7 @@ export async function minifyHTML(originalBody, level) {
 
   if (level >= 3) {
     try {
-      if (!engines.htmlMinifier) {
-        console.log("⏳ Waiting for HTMLMinifier to load...");
-        const mod = await import("html-minifier-terser-bundle");
-        engines.htmlMinifier = mod.default.minify;
-      }
+      const htmlMinifier = await getHtmlMinifier();
 
       const options = {
         html5: true,
@@ -214,7 +205,7 @@ export async function minifyHTML(originalBody, level) {
         minifyCSS: level >= 3,
       };
 
-      return await engines.htmlMinifier(originalBody, options);
+      return await htmlMinifier(originalBody, options);
     } catch (e) {
       console.warn("HTMLMinifier failed, falling back:", e);
     }
