@@ -55,7 +55,7 @@ function extractFilenameFromContent(content) {
  * Build a sanitized download filename from context
  * @returns {string}
  */
-export function buildDownloadFilename({ extractedName, ext, uploadedFilenameBase }) {
+function buildDownloadFilename({ extractedName, ext, uploadedFilenameBase }) {
   let base = DEFAULT_BASE_FILENAME;
   if (extractedName) {
     base = extractedName.toLowerCase().endsWith(`.${ext}`)
@@ -70,7 +70,7 @@ export function buildDownloadFilename({ extractedName, ext, uploadedFilenameBase
 /**
  * Trigger a browser download for the given text content
  */
-export function downloadTextFile(text, filename) {
+function downloadTextFile(text, filename) {
   const blob = new Blob([text], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
