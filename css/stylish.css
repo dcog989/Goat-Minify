@@ -88,14 +88,47 @@
     --color-bg-gutter: var(--color-bg-tertiary);
     --color-text-gutter: var(--color-text-secondary);
 
-    /* 1.12 Manual Type Selector */
+    /* 1.11 Manual Type Selector */
     --color-bg-select: var(--color-bg-quaternary);
     --color-text-select: var(--color-text-primary);
     --border-color-select: var(--border-color-primary);
     --color-bg-select-hover: var(--color-bg-icon-button-hover);
+
+    /* 1.12 Browser UI & Scrollbars */
+    color-scheme: dark; /* Tells browser to use dark UI controls */
 }
 
-/* 1.11. Light Theme Overrides */
+/* Custom Scrollbars (Webkit - Chrome/Edge/Safari) */
+::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--border-color-primary);
+    border-radius: 7px;
+    border: 3px solid var(--color-bg-tertiary); /* Creates padding effect */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-text-secondary);
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--color-bg-tertiary);
+}
+
+/* Custom Scrollbars (Firefox) */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color-primary) var(--color-bg-tertiary);
+}
+
+/* Light Theme Overrides */
 @media (prefers-color-scheme: light) {
     :root {
         /* Background Colors */
@@ -153,6 +186,10 @@
         --color-text-select: var(--color-text-primary);
         --border-color-select: var(--border-color-primary);
         --color-bg-select-hover: var(--color-bg-icon-button-hover);
+
+        /* Override scrollbar colors for light mode */
+        color-scheme: light;
+        --color-bg-tertiary: #e9e9e9; /* Ensure track matches */
     }
 }
 
@@ -282,17 +319,20 @@ h1 {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    /* Ensure the wrapper itself doesn't scroll */
+    overflow: hidden; 
 }
 
 /* 4.2. Editor Area (Gutter, Highlight, Textarea container) */
 .editor-area {
     flex-grow: 1;
-    display: flex;
-    position: relative;
+    display: block; /* Remove flex to stop child-driven expansion */
+    position: relative; /* Anchor for absolute children */
     border: 1px solid var(--border-color-primary);
     border-radius: 5px 5px 0 0;
-    overflow: hidden;
     background-color: var(--color-bg-editor-area);
+    /* FIX: The parent must NEVER scroll. It is just a frame. */
+    overflow: hidden !important; 
 }
 
 .editor-area:focus-within {
@@ -301,7 +341,13 @@ h1 {
 
 /* 4.3. Line Number Gutter */
 .line-number-gutter {
+    /* FIX: Pin gutter to the left side */
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
     width: var(--width-gutter);
+    
     background-color: var(--color-bg-gutter);
     color: var(--color-text-gutter);
     font-family: var(--font-family-monospace);
@@ -310,40 +356,49 @@ h1 {
     padding: var(--spacing-padding-editor-vertical) 5px var(--spacing-padding-editor-vertical) 0;
     text-align: right;
     user-select: none;
-    overflow: hidden;
+    overflow: hidden; /* Gutter scrolls via JS sync only */
     white-space: pre;
-    flex-shrink: 0;
+    z-index: 10; /* Ensure gutter stays above text */
     border-right: 1px solid var(--border-color-primary);
 }
 
 /* 4.4. Highlight Layer (for syntax highlighting) */
 .editor-area pre.hljs-highlight-layer {
+    /* FIX: Pin highlight layer exactly where textarea content lives */
     position: absolute;
     top: 0;
+    bottom: 0;
     left: var(--width-gutter);
-    width: calc(100% - var(--width-gutter));
-    height: 100%;
+    right: 0;
+    width: auto; /* Reset specific width */
+    height: auto; /* Let top/bottom dictate height */
+    
     margin: 0;
     padding: var(--spacing-padding-editor-vertical) var(--spacing-padding-editor-horizontal);
     font-family: var(--font-family-monospace);
     font-size: var(--font-size-textarea);
     line-height: var(--font-line-height-textarea);
-    overflow: hidden;
+    
+    /* Scrollbar suppression */
+    overflow: hidden !important;
+    scrollbar-width: none;
+    
     z-index: 1;
     pointer-events: none;
     box-sizing: border-box;
 }
 
-.editor-area pre.hljs-highlight-layer code.hljs {
-    display: block;
-    padding: 0;
-    margin: 0;
-    background: none;
-}
-
 /* 4.5. Textarea (Input/Output) */
 textarea {
-    flex-grow: 1;
+    /* FIX: Pin textarea exactly over the highlight layer */
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--width-gutter);
+    right: 0;
+    width: auto;
+    height: auto;
+    
     padding: var(--spacing-padding-editor-vertical) var(--spacing-padding-editor-horizontal);
     background-color: transparent;
     color: transparent;
@@ -354,11 +409,21 @@ textarea {
     font-family: var(--font-family-monospace);
     font-size: var(--font-size-textarea);
     line-height: var(--font-line-height-textarea);
-    width: 100%;
-    min-height: 100px;
-    position: relative;
+    
     z-index: 2;
     outline: none;
+    
+    /* This is the ONLY element allowed to scroll */
+    overflow: auto !important;
+    
+    /* Fix Chrome dark scrollbar issue */
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+    textarea {
+        color-scheme: light;
+    }
 }
 
 /* 4.6. Custom Placeholder for Input Area */
@@ -412,11 +477,16 @@ textarea.word-wrap-disabled,
 .hljs-highlight-layer.word-wrap-disabled code.hljs {
     white-space: pre;
 }
+
+/* Explicitly handle overflow for wrap states to ensure Firefox behaves */
 textarea.word-wrap-disabled {
-    overflow-x: auto;
+    overflow-x: scroll !important; /* Force scrollbar track to appear */
+    overflow-y: auto;
 }
+
 .hljs-highlight-layer.word-wrap-disabled {
-    overflow-x: hidden;
+    /* FIX: Ensure background layer never scrolls */
+    overflow: hidden !important;
 }
 
 /*==========================================================================

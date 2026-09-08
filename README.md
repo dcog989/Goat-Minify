@@ -80,7 +80,7 @@ npm run preview
 │   ├── stylish.css       # Main themes and layout
 │   └── accessibility.css # ARIA, focus, and motion handling
 ├── js/
-│   ├── GoatMinify.improved.js  # Main entry point
+│   ├── GoatMinify.js  # Main entry point
 │   └── modules/
 │       ├── constants.js        # Regex patterns and config
 │       ├── detector.js         # Language detection logic

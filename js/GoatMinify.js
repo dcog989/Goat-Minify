@@ -1,9 +1,9 @@
 /** Goat Minify - Modular Version
- * @file GoatMinify.improved.js
+ * @file GoatMinify.js
  * @description Enhanced client-side minifier with modular architecture
  * @license MIT
  * @author Chase McGoat
- * @version 2.5.2
+ * @version 2.5.4
  */
 
 // 1. Load Styles & Polyfills FIRST
@@ -17,10 +17,10 @@ import { debounce, formatOutput, sanitizeFilename, getTimestampSuffix, extractFi
 import { detectCodeType, extractLine1Comments } from './modules/detector.js';
 import { storage } from './modules/storage.js';
 import { UI } from './modules/ui-core.js';
-import { 
-    minifyJS, 
-    minifyCSS, 
-    minifyHTML, 
+import {
+    minifyJS,
+    minifyCSS,
+    minifyHTML,
     applyBasicMinification,
     preloadEngines
 } from './modules/minification-engines.js';
@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         state.autoDetectedType = detectCodeType(currentCode, state.uploadedFilenameBase);
-        
+
         if (DOM.manualTypeSelector?.value !== "auto") {
             state.effectiveType = DOM.manualTypeSelector.value;
             state.isManualTypeOverrideActive = true;
@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (DOM.outputArea) DOM.outputArea.value = minifiedCode;
-        
+
         updateAppCounts();
         updateHighlights();
         updateAllUIStates();
@@ -223,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateAllUIStates() {
         const isInputEmpty = !DOM.inputArea?.value.trim();
         const isOutputEmpty = !DOM.outputArea?.value.trim();
-        
+
         if (DOM.clearInputButton) DOM.clearInputButton.disabled = isInputEmpty;
         if (DOM.copyButton) DOM.copyButton.disabled = isOutputEmpty;
         if (DOM.downloadButton) DOM.downloadButton.disabled = isOutputEmpty;
@@ -249,12 +249,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 state.uploadedFilenameBase = null;
                 if (DOM.manualTypeSelector && DOM.manualTypeSelector.value !== "auto" && !state.isManualTypeOverrideActive) {
-                     DOM.manualTypeSelector.value = "auto";
-                     storage.set(UI_CONSTANTS.LOCAL_STORAGE_MANUAL_TYPE_KEY, "auto");
+                    DOM.manualTypeSelector.value = "auto";
+                    storage.set(UI_CONSTANTS.LOCAL_STORAGE_MANUAL_TYPE_KEY, "auto");
                 }
                 debouncedMinify();
             });
-            
+
             DOM.inputArea.addEventListener("paste", () => {
                 setTimeout(() => {
                     // Immediate visual update on paste
@@ -262,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     performMinification();
                 }, 0);
             });
-            
+
             DOM.inputArea.addEventListener("focus", updateAllUIStates);
             DOM.inputArea.addEventListener("blur", updateAllUIStates);
             DOM.inputArea.addEventListener("scroll", () => UI.syncScroll(DOM.inputArea, DOM.inputLineGutter, DOM.inputHighlightArea));
@@ -322,10 +322,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!DOM.outputArea?.value) return;
                 const timestamp = getTimestampSuffix();
                 const ext = state.effectiveType === "none" ? "txt" : state.effectiveType;
-                
+
                 let base = "GoatMinify";
                 const extractedName = extractFilenameFromContent(DOM.inputArea?.value || "");
-                
+
                 if (extractedName) {
                     if (extractedName.toLowerCase().endsWith('.' + ext)) {
                         base = extractedName.substring(0, extractedName.lastIndexOf('.'));
@@ -335,9 +335,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else if (state.uploadedFilenameBase) {
                     base = state.uploadedFilenameBase.substring(0, state.uploadedFilenameBase.lastIndexOf("."));
                 }
-                
+
                 const filename = `${sanitizeFilename(base)}-min-${timestamp}.${ext}`;
-                
+
                 const blob = new Blob([DOM.outputArea.value], { type: "text/plain" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -357,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const file = e.target.files[0];
                 if (!file) return;
                 if (file.size > 10 * 1024 * 1024) {
-                    if(!confirm("File is large (>10MB). Processing may freeze the browser. Continue?")) {
+                    if (!confirm("File is large (>10MB). Processing may freeze the browser. Continue?")) {
                         e.target.value = null;
                         return;
                     }
@@ -376,9 +376,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         DOM.inputArea.value = evt.target.result;
                         DOM.inputArea.disabled = false;
                         state.uploadedFilenameBase = file.name;
-                        
+
                         UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
-                        
+
                         // Process next tick to update UI
                         setTimeout(() => {
                             performMinification();
@@ -402,18 +402,18 @@ document.addEventListener("DOMContentLoaded", () => {
             DOM.toggleWordWrapButton.addEventListener("click", () => {
                 state.isWordWrapEnabled = !state.isWordWrapEnabled;
                 storage.set(UI_CONSTANTS.LOCAL_STORAGE_WORD_WRAP_KEY, state.isWordWrapEnabled);
-                
+
                 const cls = state.isWordWrapEnabled ? UI_CONSTANTS.WORD_WRAP_ENABLED_CLASS : UI_CONSTANTS.WORD_WRAP_DISABLED_CLASS;
                 const antiCls = state.isWordWrapEnabled ? UI_CONSTANTS.WORD_WRAP_DISABLED_CLASS : UI_CONSTANTS.WORD_WRAP_ENABLED_CLASS;
-                
+
                 [DOM.inputArea, DOM.outputArea].forEach(el => {
-                    if(el) {
+                    if (el) {
                         el.classList.add(cls);
                         el.classList.remove(antiCls);
                         el.wrap = state.isWordWrapEnabled ? "soft" : "off";
                     }
                 });
-                
+
                 DOM.toggleWordWrapButton.classList.toggle(UI_CONSTANTS.ACTIVE_CLASS, state.isWordWrapEnabled);
                 updateAppCounts();
                 updateHighlights();
@@ -444,7 +444,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             setTimeout(() => preloadEngines(), 500);
         }
-        
+
         if (DOM.inputArea?.value.trim()) {
             UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
             performMinification();
@@ -452,7 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
             handleEmptyInput();
         }
 
-        console.log('🐐 Goat Minify v2.5.2 Initialized');
+        console.log('🐐 Goat Minify Initialized');
     }
 
     init();
