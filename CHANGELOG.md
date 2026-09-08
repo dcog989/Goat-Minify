@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 2.5.2 - 2026-09-08
+#### Documentation
+- update readme for bun toolchain and new modules - (83e4207) - dcog989
+#### Continuous Integration
+- migrate deploy workflow from npm to bun - (ddb87e8) - dcog989
+
+- - -
+
 ## 2.5.1 - 2026-09-08
 #### Miscellaneous Chores
 - push tags with --tags so lightweight release tags are published - (e44c042) - dcog989
