@@ -4,11 +4,52 @@
  */
 
 import { TYPE_CONFIG } from "./type-config.js";
-import { extractFilenameFromContent, getTimestampSuffix, sanitizeFilename } from "./utils.js";
+import { getTimestampSuffix } from "./utils.js";
 
 const DEFAULT_BASE_FILENAME = "GoatMinify";
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 const FILE_PROCESS_DELAY_MS = 10;
+
+/**
+ * Sanitize filename for downloads
+ * @param {string} filename - Original filename
+ * @returns {string} Sanitized filename
+ */
+function sanitizeFilename(filename) {
+  // Remove path traversal and unsafe characters
+  const name = filename.replace(/^.*[\\/]/, "");
+  return name.replace(/[^\w.-]/g, "_").replace(/_{2,}/g, "_");
+}
+
+/**
+ * Attempt to extract a filename from the file header comments
+ * @param {string} content - File content
+ * @returns {string|null} Extracted filename or null
+ */
+function extractFilenameFromContent(content) {
+  if (!content) return null;
+  // Limit search to first 500 chars to avoid regex DoS on massive files
+  const header = content.slice(0, 500);
+
+  const patterns = [
+    // C-style block comments: /* filename.js */
+    /\/\*!?\s*([\w.-]+\.\w+)\s*\*\//,
+    // C-style line comments: // filename.js
+    /\/\/!?\s*([\w.-]+\.\w+)/,
+    // HTML comments: <!-- filename.html -->
+    /<!--!?\s*([\w.-]+\.\w+)\s*-->/,
+    // Hash comments: # filename.yaml
+    /#\s*([\w.-]+\.\w+)/,
+  ];
+
+  for (const regex of patterns) {
+    const match = header.match(regex);
+    if (match?.[1]) {
+      return sanitizeFilename(match[1]);
+    }
+  }
+  return null;
+}
 
 /**
  * Build a sanitized download filename from context
