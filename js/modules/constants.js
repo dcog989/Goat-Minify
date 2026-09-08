@@ -27,7 +27,6 @@ export const UI_CONSTANTS = {
   // Performance limits
   MAX_HIGHLIGHT_LEN: 50000, // Disable syntax highlighting for files > 50KB to prevent freezing
 
-  ACCEPTED_FILE_EXTENSIONS: ["js", "css", "html", "txt", "json", "xml", "svg", "yaml", "yml", "toml", "md", "markdown"],
   DEFAULT_HIGHLIGHT_COLOR: "var(--color-text-highlight)",
   ERROR_HIGHLIGHT_COLOR: "red",
   TYPE_OPTIONS: ["auto", "js", "css", "html", "json", "xml", "svg", "yaml", "toml", "md", "none"],
@@ -69,12 +68,10 @@ export const DETECT_REGEX = {
   TOML_KEY_VALUE: /^\s*([a-zA-Z0-9_.-]+)\s*=\s*(["']|true|false|[0-9]|\[|\{)/m,
 
   // MARKDOWN
-  MARKDOWN_FRONTMATTER: /^---\s*$/m,
   MARKDOWN_HEADER: /^#{1,6}\s+.+$/m,
   MARKDOWN_LIST: /^[\s\t]*(\*|\+|-|\d+\.)\s+\S+/m,
   MARKDOWN_CODE_BLOCK: /^[\s\t]*(`{3,}|~{3,})/m,
   MARKDOWN_LINK: /!{0,1}\[.*?\]\(.*?\)/,
-  MARKDOWN_FORMAT: /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3/,
 };
 
 export const ICONS = {
