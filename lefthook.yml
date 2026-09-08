@@ -1,0 +1,15 @@
+# Lefthook git hooks configuration
+# Docs: https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  commands:
+    check:
+      glob: "*.{js,css,html,md,json,svg}"
+      run: bunx biome check --write {staged_files}
+      stage_fixed: true
+
+commit-msg:
+  commands:
+    conventional-commit:
+      run: cog verify --file {1}

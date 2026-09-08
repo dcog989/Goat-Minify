@@ -3,17 +3,6 @@
   "version": "2.4.3",
   "description": "Client-side code minification tool supporting JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown",
   "type": "module",
-  "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
-    "lint": "biome lint .",
-    "lint:fix": "biome lint --write .",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/dcog989/Goat-Minify"
@@ -29,10 +18,26 @@
     "postcss",
     "web-app"
   ],
+  "scripts": {
+    "build": "vite build",
+    "changelog": "cog changelog",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "clean": "rm -rf dist .biome",
+    "commit": "cog commit",
+    "dev": "vite",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
   "author": "Chase McGoat",
   "license": "MIT",
   "dependencies": {
-    "cssnano": "^7.1.9",
+    "cssnano": "^9.0.4",
     "highlight.js": "^11.12.0",
     "html-minifier-terser": "^7.2.0",
     "postcss": "^8.5.28",
@@ -40,16 +45,17 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",
-    "@vitest/ui": "^5.0",
+    "@vitest/ui": "^5.0.0",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
-    "jsdom": "^30.0",
+    "jsdom": "^30.0.1",
+    "lefthook": "^2.1.12",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
     "url": "^0.11.4",
     "util": "^0.12.5",
-    "vite": "^8.2",
+    "vite": "^8.2.2",
     "vitest": "^5.0.0"
   }
 }
