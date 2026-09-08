@@ -15,13 +15,19 @@ import { UI_CONSTANTS } from "./constants.js";
 import { TYPE_CONFIG } from "./type-config.js";
 
 // Register only necessary languages to save bundle size
-hljs.registerLanguage("javascript", javascript);
-hljs.registerLanguage("css", css);
-hljs.registerLanguage("xml", xml); // Handles HTML, SVG, XML
-hljs.registerLanguage("json", json);
-hljs.registerLanguage("yaml", yaml);
-hljs.registerLanguage("ini", ini); // Handles TOML
-hljs.registerLanguage("markdown", markdown);
+const HLJS_LANGUAGES = {
+  javascript, // Handles JS
+  css,
+  xml, // Handles HTML, SVG, XML
+  json,
+  yaml,
+  ini, // Handles TOML
+  markdown,
+};
+
+for (const [name, language] of Object.entries(HLJS_LANGUAGES)) {
+  hljs.registerLanguage(name, language);
+}
 
 import "highlight.js/styles/github-dark.min.css";
 
