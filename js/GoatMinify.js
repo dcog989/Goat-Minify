@@ -14,17 +14,12 @@ import "./modules/polyfills.js";
 // 2. Load other modules
 import { ICONS, UI_CONSTANTS } from "./modules/constants.js";
 import { detectCodeType, extractLine1Comments } from "./modules/detector.js";
+import { createFileHandler } from "./modules/file-handler.js";
 import { preloadEngines } from "./modules/minification-engines.js";
 import { storage } from "./modules/storage.js";
 import { TYPE_CONFIG } from "./modules/type-config.js";
 import { UI } from "./modules/ui-core.js";
-import {
-  debounce,
-  extractFilenameFromContent,
-  formatOutput,
-  getTimestampSuffix,
-  sanitizeFilename,
-} from "./modules/utils.js";
+import { debounce, formatOutput } from "./modules/utils.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM loaded. App starting...");
@@ -336,86 +331,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    if (DOM.downloadButton) {
-      DOM.downloadButton.addEventListener("click", () => {
-        if (!DOM.outputArea?.value) return;
-        const timestamp = getTimestampSuffix();
-        const ext = state.effectiveType === "none" ? "txt" : state.effectiveType;
-
-        let base = "GoatMinify";
-        const extractedName = extractFilenameFromContent(DOM.inputArea?.value || "");
-
-        if (extractedName) {
-          if (extractedName.toLowerCase().endsWith(`.${ext}`)) {
-            base = extractedName.substring(0, extractedName.lastIndexOf("."));
-          } else {
-            base = extractedName;
-          }
-        } else if (state.uploadedFilenameBase) {
-          base = state.uploadedFilenameBase.substring(0, state.uploadedFilenameBase.lastIndexOf("."));
-        }
-
-        const filename = `${sanitizeFilename(base)}-min-${timestamp}.${ext}`;
-
-        const blob = new Blob([DOM.outputArea.value], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        UI.announceToScreenReader("File downloaded");
-      });
-    }
-
-    if (DOM.uploadFileButton && DOM.fileInputHidden) {
-      DOM.uploadFileButton.addEventListener("click", () => DOM.fileInputHidden.click());
-      DOM.fileInputHidden.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 10 * 1024 * 1024) {
-          if (!confirm("File is large (>10MB). Processing may freeze the browser. Continue?")) {
-            e.target.value = null;
-            return;
-          }
-        }
-
-        // Show loading state
-        if (DOM.inputArea) {
-          DOM.inputArea.value = "Loading...";
-          DOM.inputArea.disabled = true;
-        }
-        showTemporaryStatusMessage("Reading file...", false);
-
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          if (DOM.inputArea) {
-            DOM.inputArea.value = evt.target.result;
-            DOM.inputArea.disabled = false;
-            state.uploadedFilenameBase = file.name;
-
-            UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
-
-            // Process next tick to update UI
-            setTimeout(() => {
-              performMinification();
-              showTemporaryStatusMessage("File loaded", false);
-            }, 10);
-          }
-        };
-        reader.onerror = () => {
-          showTemporaryStatusMessage("Error reading file", true);
-          if (DOM.inputArea) {
-            DOM.inputArea.value = "";
-            DOM.inputArea.disabled = false;
-          }
-        };
-        reader.readAsText(file);
-        e.target.value = null;
-      });
-    }
+    const fileHandler = createFileHandler({
+      DOM,
+      state,
+      onMinify: performMinification,
+      onRawContent: (content) => UI.setRawHighlightContent(DOM.inputHighlightCode, content),
+      showStatusMessage,
+      announceToScreenReader: UI.announceToScreenReader.bind(UI),
+    });
+    fileHandler.attachListeners();
 
     if (DOM.toggleWordWrapButton) {
       DOM.toggleWordWrapButton.addEventListener("click", () => {
