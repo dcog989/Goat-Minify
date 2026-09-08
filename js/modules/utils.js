@@ -10,11 +10,11 @@
  * @returns {Function} Debounced function
  */
 export function debounce(func, delay) {
-    let timeoutId;
-    return (...args) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => func.apply(this, args), delay);
-    };
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
 }
 
 /**
@@ -22,8 +22,8 @@ export function debounce(func, delay) {
  * @returns {string} Timestamp in format YYMMDDH HMM
  */
 export function getTimestampSuffix() {
-    const n = new Date();
-    return `${String(n.getFullYear()).slice(-2)}${String(n.getMonth() + 1).padStart(2, "0")}${String(n.getDate()).padStart(2, "0")}${String(n.getHours()).padStart(2, "0")}${String(n.getMinutes()).padStart(2, "0")}`;
+  const n = new Date();
+  return `${String(n.getFullYear()).slice(-2)}${String(n.getMonth() + 1).padStart(2, "0")}${String(n.getDate()).padStart(2, "0")}${String(n.getHours()).padStart(2, "0")}${String(n.getMinutes()).padStart(2, "0")}`;
 }
 
 /**
@@ -32,7 +32,7 @@ export function getTimestampSuffix() {
  * @returns {string} Normalized text
  */
 export function normalizeLineEndings(text) {
-    return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
 
 /**
@@ -42,14 +42,14 @@ export function normalizeLineEndings(text) {
  * @returns {string} Formatted output
  */
 export function formatOutput(header, body) {
-    const trimmedHeader = header.trimEnd();
-    const trimmedBody = body.trim();
-    
-    if (!trimmedHeader && !trimmedBody) return "";
-    if (!trimmedHeader) return trimmedBody;
-    if (!trimmedBody) return trimmedHeader;
-    
-    return `${trimmedHeader}\n${trimmedBody}`;
+  const trimmedHeader = header.trimEnd();
+  const trimmedBody = body.trim();
+
+  if (!trimmedHeader && !trimmedBody) return "";
+  if (!trimmedHeader) return trimmedBody;
+  if (!trimmedBody) return trimmedHeader;
+
+  return `${trimmedHeader}\n${trimmedBody}`;
 }
 
 /**
@@ -58,9 +58,9 @@ export function formatOutput(header, body) {
  * @returns {string} Sanitized filename
  */
 export function sanitizeFilename(filename) {
-    // Remove path traversal and unsafe characters
-    const name = filename.replace(/^.*[\\\/]/, ''); 
-    return name.replace(/[^\w.-]/g, "_").replace(/_{2,}/g, "_");
+  // Remove path traversal and unsafe characters
+  const name = filename.replace(/^.*[\\/]/, "");
+  return name.replace(/[^\w.-]/g, "_").replace(/_{2,}/g, "_");
 }
 
 /**
@@ -69,29 +69,29 @@ export function sanitizeFilename(filename) {
  * @returns {string|null} Extracted filename or null
  */
 export function extractFilenameFromContent(content) {
-    if (!content) return null;
-    // Limit search to first 500 chars to avoid regex DoS on massive files
-    const header = content.slice(0, 500);
-    
-    const patterns = [
-        // C-style block comments: /* filename.js */
-        /\/\*!?\s*([\w.-]+\.\w+)\s*\*\//,
-        // C-style line comments: // filename.js
-        /\/\/!?\s*([\w.-]+\.\w+)/,
-        // HTML comments: <!-- filename.html -->
-        /<!--!?\s*([\w.-]+\.\w+)\s*-->/,
-        // Hash comments: # filename.yaml
-        /#\s*([\w.-]+\.\w+)/
-    ];
+  if (!content) return null;
+  // Limit search to first 500 chars to avoid regex DoS on massive files
+  const header = content.slice(0, 500);
 
-    for (const regex of patterns) {
-        const match = header.match(regex);
-        if (match && match[1]) {
-            // Validate extension presence
-            if (match[1].includes('.')) {
-                return sanitizeFilename(match[1]);
-            }
-        }
+  const patterns = [
+    // C-style block comments: /* filename.js */
+    /\/\*!?\s*([\w.-]+\.\w+)\s*\*\//,
+    // C-style line comments: // filename.js
+    /\/\/!?\s*([\w.-]+\.\w+)/,
+    // HTML comments: <!-- filename.html -->
+    /<!--!?\s*([\w.-]+\.\w+)\s*-->/,
+    // Hash comments: # filename.yaml
+    /#\s*([\w.-]+\.\w+)/,
+  ];
+
+  for (const regex of patterns) {
+    const match = header.match(regex);
+    if (match?.[1]) {
+      // Validate extension presence
+      if (match[1].includes(".")) {
+        return sanitizeFilename(match[1]);
+      }
     }
-    return null;
+  }
+  return null;
 }

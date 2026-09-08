@@ -6,10 +6,10 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "format": "prettier --write \"**/*.{js,css,html,md}\"",
-    "format:check": "prettier --check \"**/*.{js,css,html,md}\"",
-    "lint": "eslint js/**/*.js",
-    "lint:fix": "eslint js/**/*.js --fix",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui"
@@ -39,11 +39,10 @@
     "terser": "^5.51.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
     "@vitest/ui": "^5.0",
     "buffer": "^6.0.3",
-    "eslint-config-prettier": "^10.1.8",
     "events": "^3.3.0",
-    "globals": "^17.0",
     "jsdom": "^30.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",

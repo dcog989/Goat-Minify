@@ -1,11 +1,19 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "includes": ["**", "!.assets/", "!.svelte-kit/", "!node_modules/", "!src-tauri/"]
+    "includes": ["**", "!node_modules/", "!dist/"]
   },
   "formatter": {
+    "enabled": true,
     "indentStyle": "space",
+    "indentWidth": 2,
     "lineWidth": 120
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
   },
   "html": {
     "experimentalFullSupportEnabled": true,
@@ -15,22 +23,5 @@
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
-  },
-  "overrides": [
-    {
-      "includes": ["**/*.svelte"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noUnusedVariables": "off",
-            "noUnusedImports": "off"
-          },
-          "a11y": {
-            "noLabelWithoutControl": "off",
-            "useSemanticElements": "off"
-          }
-        }
-      }
-    }
-  ]
+  }
 }
