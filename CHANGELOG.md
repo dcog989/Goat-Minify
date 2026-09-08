@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 2.5.1 - 2026-09-08
+#### Miscellaneous Chores
+- push tags with --tags so lightweight release tags are published - (e44c042) - dcog989
+- auto-push after cog bump via post_bump_hooks - (ecbef94) - dcog989
+
+- - -
+
 ## 2.5.0 - 2026-09-08
 #### Build system
 - migrate optimizeDeps.esbuildOptions to rolldownOptions - (122c97d) - dcog989
