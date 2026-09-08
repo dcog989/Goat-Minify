@@ -5,8 +5,6 @@
 
 import { applyBasicMinification, minifyCSS, minifyHTML, minifyJS } from "./minification-engines.js";
 
-const basicMinify = (body, level, type) => applyBasicMinification(body, level, type);
-
 export const TYPE_CONFIG = {
   js: { minify: minifyJS, hljs: "javascript", ext: "js" },
   json: { minify: minifyJS, hljs: "json", ext: "json" },
@@ -14,8 +12,8 @@ export const TYPE_CONFIG = {
   html: { minify: minifyHTML, hljs: "xml", ext: "html" },
   svg: { minify: minifyHTML, hljs: "xml", ext: "svg" },
   xml: { minify: minifyHTML, hljs: "xml", ext: "xml" },
-  yaml: { minify: basicMinify, hljs: "yaml", ext: "yaml" },
-  toml: { minify: basicMinify, hljs: "ini", ext: "toml" },
-  md: { minify: basicMinify, hljs: "markdown", ext: "md" },
-  none: { minify: basicMinify, hljs: "plaintext", ext: "txt" },
+  yaml: { minify: applyBasicMinification, hljs: "yaml", ext: "yaml" },
+  toml: { minify: applyBasicMinification, hljs: "ini", ext: "toml" },
+  md: { minify: applyBasicMinification, hljs: "markdown", ext: "md" },
+  none: { minify: applyBasicMinification, hljs: "plaintext", ext: "txt" },
 };
