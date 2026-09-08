@@ -22,8 +22,6 @@ import { UI } from "./modules/ui-core.js";
 import { debounce, formatOutput } from "./modules/utils.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM loaded. App starting...");
-
   // =======================
   // DOM Element References
   // =======================
@@ -116,14 +114,17 @@ document.addEventListener("DOMContentLoaded", () => {
     DOM.typeDisplayOutput.appendChild(valueSpan);
   }
 
+  const minifyLevelRadios = Array.from(document.querySelectorAll('input[name="minify-level"]'));
+
   function getMinifyLevel() {
-    const radio = document.querySelector('input[name="minify-level"]:checked');
-    const level = radio ? parseInt(radio.value, 10) : 4;
-    return level < 1 || level > 4 || Number.isNaN(level) ? 4 : level;
+    const checked = minifyLevelRadios.find((el) => el.checked);
+    const level = checked ? parseInt(checked.value, 10) : UI_CONSTANTS.DEFAULT_MINIFY_LEVEL;
+    return Number.isNaN(level) || level < UI_CONSTANTS.MIN_MINIFY_LEVEL || level > UI_CONSTANTS.MAX_MINIFY_LEVEL
+      ? UI_CONSTANTS.DEFAULT_MINIFY_LEVEL
+      : level;
   }
 
   async function performMinification() {
-    console.log("Processing...");
     if (!DOM.inputArea) return;
     const currentCode = DOM.inputArea.value;
 
@@ -143,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     updateTypeDisplayOutput();
-    updateAppCounts();
 
     const level = getMinifyLevel();
     let minifiedCode = "";
@@ -214,6 +214,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, UI_CONSTANTS.HIGHLIGHT_DEBOUNCE_DELAY_MS);
 
+  function updateInputHighlight() {
+    UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
+  }
+
   function updateHighlights() {
     debouncedHighlight();
     if (DOM.outputArea && DOM.outputHighlightCode) {
@@ -255,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (DOM.inputArea) {
       DOM.inputArea.addEventListener("input", () => {
         // Immediate visual update to background layer
-        UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
+        updateInputHighlight();
 
         state.uploadedFilenameBase = null;
         if (DOM.manualTypeSelector && DOM.manualTypeSelector.value !== "auto" && !state.isManualTypeOverrideActive) {
@@ -268,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
       DOM.inputArea.addEventListener("paste", () => {
         setTimeout(() => {
           // Immediate visual update on paste
-          UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
+          updateInputHighlight();
           performMinification();
         }, 0);
       });
@@ -300,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    document.querySelectorAll('input[name="minify-level"]').forEach((el) => {
+    minifyLevelRadios.forEach((el) => {
       el.addEventListener("change", performMinification);
     });
 
@@ -354,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener(
       "resize",
-      debounce(() => updateAppCounts(), 200),
+      debounce(() => updateAppCounts(), UI_CONSTANTS.RESIZE_DEBOUNCE_DELAY_MS),
     );
   }
 
@@ -377,17 +381,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if ("requestIdleCallback" in window) {
       requestIdleCallback(() => preloadEngines());
     } else {
-      setTimeout(() => preloadEngines(), 500);
+      setTimeout(() => preloadEngines(), UI_CONSTANTS.ENGINE_PRELOAD_FALLBACK_DELAY_MS);
     }
 
     if (DOM.inputArea?.value.trim()) {
-      UI.setRawHighlightContent(DOM.inputHighlightCode, DOM.inputArea.value);
+      updateInputHighlight();
       performMinification();
     } else {
       handleEmptyInput();
     }
-
-    console.log("🐐 Goat Minify Initialized");
   }
 
   init();

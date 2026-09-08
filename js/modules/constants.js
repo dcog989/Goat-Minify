@@ -18,7 +18,11 @@ export const UI_CONSTANTS = {
 
   FEEDBACK_MESSAGE_TIMEOUT_MS: 1500,
   STATUS_MESSAGE_TIMEOUT_MS: 3000,
-  DEFAULT_MINIFY_LEVEL_ID: "minify-level-4",
+  MIN_MINIFY_LEVEL: 1,
+  MAX_MINIFY_LEVEL: 4,
+  DEFAULT_MINIFY_LEVEL: 4,
+  ENGINE_PRELOAD_FALLBACK_DELAY_MS: 500,
+  RESIZE_DEBOUNCE_DELAY_MS: 200,
 
   // Performance limits
   MAX_HIGHLIGHT_LEN: 50000, // Disable syntax highlighting for files > 50KB to prevent freezing

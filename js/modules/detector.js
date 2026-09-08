@@ -4,6 +4,7 @@
  */
 
 import { DETECT_REGEX } from "./constants.js";
+import { normalizeLineEndings } from "./utils.js";
 
 /**
  * Detect code type from content
@@ -12,7 +13,7 @@ import { DETECT_REGEX } from "./constants.js";
  * @returns {string} Detected type (js, css, html, etc.)
  */
 export function detectCodeType(code, uploadedFilename = null) {
-  const trimmedCode = code.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+  const trimmedCode = normalizeLineEndings(code).trim();
   if (!trimmedCode) return "none";
 
   const firstK = trimmedCode.substring(0, 3000);
