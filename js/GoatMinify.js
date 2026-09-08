@@ -346,22 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
         state.isWordWrapEnabled = !state.isWordWrapEnabled;
         storage.set(UI_CONSTANTS.LOCAL_STORAGE_WORD_WRAP_KEY, state.isWordWrapEnabled);
 
-        const cls = state.isWordWrapEnabled
-          ? UI_CONSTANTS.WORD_WRAP_ENABLED_CLASS
-          : UI_CONSTANTS.WORD_WRAP_DISABLED_CLASS;
-        const antiCls = state.isWordWrapEnabled
-          ? UI_CONSTANTS.WORD_WRAP_DISABLED_CLASS
-          : UI_CONSTANTS.WORD_WRAP_ENABLED_CLASS;
-
-        [DOM.inputArea, DOM.outputArea].forEach((el) => {
-          if (el) {
-            el.classList.add(cls);
-            el.classList.remove(antiCls);
-            el.wrap = state.isWordWrapEnabled ? "soft" : "off";
-          }
-        });
-
-        DOM.toggleWordWrapButton.classList.toggle(UI_CONSTANTS.ACTIVE_CLASS, state.isWordWrapEnabled);
+        UI.setWordWrap([DOM.inputArea, DOM.outputArea], DOM.toggleWordWrapButton, state.isWordWrapEnabled);
         updateAppCounts();
         updateHighlights();
       });
@@ -379,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const savedWrap = storage.get(UI_CONSTANTS.LOCAL_STORAGE_WORD_WRAP_KEY);
     if (savedWrap === "true") {
       state.isWordWrapEnabled = true;
-      DOM.toggleWordWrapButton?.click();
+      UI.setWordWrap([DOM.inputArea, DOM.outputArea], DOM.toggleWordWrapButton, true);
     }
 
     const savedType = storage.get(UI_CONSTANTS.LOCAL_STORAGE_MANUAL_TYPE_KEY);

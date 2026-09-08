@@ -189,6 +189,19 @@ export const UI = {
     return span;
   },
 
+  setWordWrap(textareas, toggleButton, enabled) {
+    const cls = enabled ? UI_CONSTANTS.WORD_WRAP_ENABLED_CLASS : UI_CONSTANTS.WORD_WRAP_DISABLED_CLASS;
+    const antiCls = enabled ? UI_CONSTANTS.WORD_WRAP_DISABLED_CLASS : UI_CONSTANTS.WORD_WRAP_ENABLED_CLASS;
+
+    textareas.forEach((el) => {
+      if (!el) return;
+      el.classList.add(cls);
+      el.classList.remove(antiCls);
+      el.wrap = enabled ? "soft" : "off";
+    });
+    toggleButton?.classList.toggle(UI_CONSTANTS.ACTIVE_CLASS, enabled);
+  },
+
   announceToScreenReader(message) {
     const announcement = document.createElement("div");
     announcement.setAttribute("role", "status");
