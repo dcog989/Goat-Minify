@@ -25,7 +25,7 @@
     "changelog": "cog changelog",
     "check": "biome check .",
     "check:fix": "biome check --write .",
-    "clean": "rm -rf dist .biome",
+    "clean": "rm -rf dist .biome node_modules",
     "commit": "cog commit",
     "dev": "vite",
     "format": "biome format --write .",
