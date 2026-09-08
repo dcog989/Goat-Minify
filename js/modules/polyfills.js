@@ -6,14 +6,7 @@
 
 import { Buffer } from "buffer";
 
-// Inject Buffer for libraries that rely on it (like browserslist/cssnano)
-if (!window.Buffer) {
-  window.Buffer = Buffer;
-}
-
-import process from "process";
-
-// Inject globals
+// Inject globals for libraries that rely on them (like browserslist/cssnano)
 window.Buffer = Buffer;
 window.process = process;
 window.global = window;

@@ -4,22 +4,16 @@
  * Replaces the abandoned 'os-browserify' package.
  */
 
-export const platform = () => "browser";
-export const type = () => "Browser";
-export const release = () => "1.0.0";
-export const endianness = () => "LE";
-export const arch = () => "javascript";
-export const homedir = () => "/";
-export const tmpdir = () => "/tmp";
-export const EOL = "\n";
-
-export default {
-  platform,
-  type,
-  release,
-  endianness,
-  arch,
-  homedir,
-  tmpdir,
-  EOL,
+const os = {
+  platform: () => "browser",
+  type: () => "Browser",
+  release: () => "1.0.0",
+  endianness: () => "LE",
+  arch: () => "javascript",
+  homedir: () => "/",
+  tmpdir: () => "/tmp",
+  EOL: "\n",
 };
+
+export const { platform, type, release, endianness, arch, homedir, tmpdir, EOL } = os;
+export default os;
