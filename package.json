@@ -1,8 +1,10 @@
 {
   "name": "goat-minify",
-  "version": "2.4.3",
+  "author": "Chase McGoat",
   "description": "Client-side code minification tool supporting JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown",
+  "license": "MIT",
   "type": "module",
+  "version": "2.4.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/dcog989/Goat-Minify"
@@ -34,8 +36,6 @@
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
-  "author": "Chase McGoat",
-  "license": "MIT",
   "dependencies": {
     "cssnano": "^9.0.4",
     "highlight.js": "^11.12.0",
