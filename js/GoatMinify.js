@@ -14,14 +14,9 @@ import "./modules/polyfills.js";
 // 2. Load other modules
 import { ICONS, UI_CONSTANTS } from "./modules/constants.js";
 import { detectCodeType, extractLine1Comments } from "./modules/detector.js";
-import {
-  applyBasicMinification,
-  minifyCSS,
-  minifyHTML,
-  minifyJS,
-  preloadEngines,
-} from "./modules/minification-engines.js";
+import { preloadEngines } from "./modules/minification-engines.js";
 import { storage } from "./modules/storage.js";
+import { TYPE_CONFIG } from "./modules/type-config.js";
 import { UI } from "./modules/ui-core.js";
 import {
   debounce,
@@ -160,23 +155,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const { header, body } = extractLine1Comments(currentCode, state.effectiveType);
 
     try {
-      switch (state.effectiveType) {
-        case "js":
-        case "json":
-          minifiedCode = formatOutput(header, await minifyJS(body, level));
-          break;
-        case "css":
-          minifiedCode = formatOutput(header, await minifyCSS(body, level));
-          break;
-        case "html":
-        case "svg":
-        case "xml":
-          minifiedCode = formatOutput(header, await minifyHTML(body, level));
-          break;
-        default:
-          minifiedCode = formatOutput(header, applyBasicMinification(body, level, state.effectiveType));
-          break;
-      }
+      const typeConfig = TYPE_CONFIG[state.effectiveType] ?? TYPE_CONFIG.none;
+      minifiedCode = formatOutput(header, await typeConfig.minify(body, level, state.effectiveType));
     } catch (error) {
       console.error("Minify Error:", error);
       showTemporaryStatusMessage("Minification error. Output may be incomplete.", true);

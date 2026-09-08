@@ -12,6 +12,7 @@ import markdown from "highlight.js/lib/languages/markdown";
 import xml from "highlight.js/lib/languages/xml";
 import yaml from "highlight.js/lib/languages/yaml";
 import { UI_CONSTANTS } from "./constants.js";
+import { TYPE_CONFIG } from "./type-config.js";
 
 // Register only necessary languages to save bundle size
 hljs.registerLanguage("javascript", javascript);
@@ -146,32 +147,7 @@ export const UI = {
       return;
     }
 
-    let hljsLang = "plaintext";
-    switch (lang) {
-      case "js":
-        hljsLang = "javascript";
-        break;
-      case "html":
-      case "xml":
-      case "svg":
-        hljsLang = "xml";
-        break;
-      case "css":
-        hljsLang = "css";
-        break;
-      case "json":
-        hljsLang = "json";
-        break;
-      case "yaml":
-        hljsLang = "yaml";
-        break;
-      case "toml":
-        hljsLang = "ini";
-        break;
-      case "md":
-        hljsLang = "markdown";
-        break;
-    }
+    const { hljs: hljsLang } = TYPE_CONFIG[lang] ?? TYPE_CONFIG.none;
 
     if (sourceText.trim() === "") {
       codeEl.textContent = "";
