@@ -33,6 +33,7 @@
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "preview": "vite preview",
+    "release": "cog bump --auto",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
