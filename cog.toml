@@ -10,7 +10,10 @@ pre = "alpha.*"
 skip_ci = "[skip ci]"
 skip_untracked = false
 pre_bump_hooks = []
-post_bump_hooks = ["git push origin main --tags"]
+post_bump_hooks = [
+    "git push origin main --tags",
+    "gh release create {{version_tag}} --notes \"$(cog changelog --at {{version_tag}})\"",
+]
 pre_package_bump_hooks = []
 post_package_bump_hooks = []
 
