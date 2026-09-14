@@ -9,7 +9,10 @@ branch_whitelist = []
 pre = "alpha.*"
 skip_ci = "[skip ci]"
 skip_untracked = false
-pre_bump_hooks = []
+pre_bump_hooks = [
+    "bun run check",
+    "bunx vitest run",
+]
 post_bump_hooks = [
     "git push origin main --tags",
     "gh release create {{version_tag}} --notes \"$(cog changelog --at {{version_tag}})\"",
