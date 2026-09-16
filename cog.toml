@@ -11,7 +11,7 @@ skip_ci = "[skip ci]"
 skip_untracked = false
 pre_bump_hooks = [
     "bun run check",
-    "bunx vitest run",
+    "bunx vitest run --passWithNoTests",
 ]
 post_bump_hooks = [
     "git push origin main --tags",
