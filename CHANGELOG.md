@@ -2,6 +2,22 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 2.5.3 - 2026-09-16
+#### Bug Fixes
+- (**ci**) allow pre-bump test hook to pass with no test files - (946bd0d) - dcog989
+#### Continuous Integration
+- drop bun ecosystem from dependabot - (9cd2a92) - dcog989
+- add dependabot configuration - (c93f6fd) - dcog989
+#### Miscellaneous Chores
+- (**editorconfig**) generalize indentation rules for multi-language use - (d68a048) - dcog989
+- (**release**) run full checks in pre-bump hooks - (3b61018) - dcog989
+- (**release**) publish cocogitto changelog as GitHub release body - (9dad601) - dcog989
+- updates - (668e02c) - dcog989
+- clena node modules - (761b6ed) - dcog989
+- push branch and tags explicitly after cog bump - (8d0a305) - dcog989
+
+- - -
+
 ## 2.5.2 - 2026-09-08
 #### Documentation
 - update readme for bun toolchain and new modules - (83e4207) - dcog989
