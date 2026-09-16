@@ -12,6 +12,7 @@ skip_untracked = false
 pre_bump_hooks = [
     "bun run check",
     "bunx vitest run --passWithNoTests",
+    "bun pm pkg set version={{version}}",
 ]
 post_bump_hooks = [
     "git push origin main --tags",
