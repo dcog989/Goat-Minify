@@ -4,7 +4,7 @@
   "description": "Client-side code minification tool supporting JS, CSS, HTML, XML, JSON, YAML, TOML, and Markdown",
   "license": "MIT",
   "type": "module",
-  "version": "2.4.3",
+  "version": "2.5.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/dcog989/Goat-Minify"

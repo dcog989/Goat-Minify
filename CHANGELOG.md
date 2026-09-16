@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 2.5.4 - 2026-09-16
+#### Build system
+- (**release**) sync package.json version in pre-bump hook - (a234b50) - dcog989
+
+- - -
+
 ## 2.5.3 - 2026-09-16
 #### Bug Fixes
 - (**ci**) allow pre-bump test hook to pass with no test files - (946bd0d) - dcog989
