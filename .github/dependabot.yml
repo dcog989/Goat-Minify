@@ -1,42 +1,5 @@
 version: 2
 updates:
-  - package-ecosystem: 'bun'
-    directory: '/'
-    schedule:
-      interval: 'weekly'
-    open-pull-requests-limit: 10
-    groups:
-      minify:
-        patterns:
-          - 'cssnano'
-          - 'html-minifier-terser'
-          - 'postcss'
-          - 'terser'
-      highlight:
-        patterns:
-          - 'highlight.js'
-      biome:
-        patterns:
-          - '@biomejs/*'
-      test:
-        patterns:
-          - 'vitest'
-          - '@vitest/*'
-          - 'jsdom'
-      tooling:
-        patterns:
-          - 'vite'
-          - 'lefthook'
-      polyfills:
-        patterns:
-          - 'buffer'
-          - 'events'
-          - 'path-browserify'
-          - 'process'
-          - 'stream-browserify'
-          - 'url'
-          - 'util'
-
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
